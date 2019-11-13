@@ -63,7 +63,20 @@ void GUI_GLOBAL::setup(string GuiName, string FileName, float x, float y)
 	
 	/********************
 	********************/
-	gui.add(Led_dimmer.setup("dimmer", 1.0, 0, 1.0));
+	Group_Light.setup("Light");
+		ofVec4f ColWhenTest_init = ofVec4f(0.0, 0.0, 1.0, 0.0);
+		ofVec4f ColWhenTest_min = ofVec4f(0.0, 0.0, 0.0, 0.0);
+		ofVec4f ColWhenTest_max = ofVec4f(1.0, 1.0, 1.0, 1.0);
+		Group_Light.add(col_WhenTest.setup("ColTest", ColWhenTest_init, ColWhenTest_min, ColWhenTest_max));
+		
+		Group_Light.add(Led_dimmer.setup("dimmer", 1.0, 0, 1.0));
+		Group_Light.add(volLight_Back_max.setup("L_Back_max", 0.5, 0, 1.0)); // XBCamの検知と相談しながら.
+	gui.add(&Group_Light);
+	
+	Group_Shutter.setup("Shutter");
+		Group_Shutter.add(DmxShutter_open.setup("open", 150, 0, 255));
+		Group_Shutter.add(DmxShutter_close.setup("close", 0, 0, 255));
+	gui.add(&Group_Shutter);
 
 	/********************
 	********************/

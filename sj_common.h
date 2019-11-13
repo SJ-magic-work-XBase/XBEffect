@@ -33,7 +33,9 @@ enum{
 enum LED_DEVICE_TYPE{
 	LED_DEVICE_TYPE_FIXED,
 	LED_DEVICE_TYPE_MOVING,
+	
 	LED_DEVICE_RGB,
+	LED_DEVICE_1CH,
 };
 
 
@@ -70,7 +72,15 @@ public:
 	****************************************/
 	void setup(string GuiName, string FileName = "gui.xml", float x = 10, float y = 10);
 	
-	ofxFloatSlider Led_dimmer;
+	ofxGuiGroup Group_Light;
+		ofxVec4Slider col_WhenTest;
+		ofxFloatSlider Led_dimmer;
+		ofxFloatSlider volLight_Back_max;
+		
+		
+	ofxGuiGroup Group_Shutter;	
+		ofxFloatSlider DmxShutter_open;
+		ofxFloatSlider DmxShutter_close;
 
 	ofxPanel gui;
 };

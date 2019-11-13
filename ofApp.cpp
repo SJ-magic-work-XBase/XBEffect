@@ -9,8 +9,7 @@
 ******************************/
 ofApp::ofApp()
 : Osc_XBC("127.0.0.1", 12346, 12345)
-, Osc_Video_Nebuta("127.0.0.1", 12350, 12349)
-, Osc_Video_Wall("127.0.0.1", 12348, 12347)
+, Osc_Video_Nebuta("127.0.0.1", 12348, 12347)
 {
 	/********************
 	********************/
@@ -27,7 +26,6 @@ ofApp::ofApp()
 	font[FONT_M].load("font/RictyDiminished-Regular.ttf", 12, true, true, true);
 	font[FONT_L].load("font/RictyDiminished-Regular.ttf", 15, true, true, true);
 	font[FONT_LL].load("font/RictyDiminished-Regular.ttf", 30, true, true, true);
-	
 }
 
 /******************************
@@ -38,6 +36,14 @@ ofApp::~ofApp()
 	if(Gui_Global) delete Gui_Global;
 	
 	DmxOut_AllBlack();
+	sendDmx_Shutter(false);
+}
+
+/******************************
+******************************/
+void ofApp::exit()
+{
+	SendOSC_Clear();
 }
 
 /******************************
@@ -63,15 +69,21 @@ void ofApp::setup(){
 	/*/
 	ofSetVerticalSync(true);
 	ofSetFrameRate(fps);
-	//*/
+    //*/
 	
 	ofSetEscapeQuitsApp(false);
 	
 	/********************
 	********************/
 	setup_Gui();
+	if(isFile_Exist("../../../data/gui.xml"))	Gui_Global->gui.loadFromFile("gui.xml");
 	
-	SetLightPattern__On();
+	SetFrontPattern__On(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetFrontPattern__On(Light_Climax, NUM_LIGHTS_CLIMAX);
+	SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
+	SetFrontPattern__On(Light_Back, NUM_LIGHTS_BACK);
+	SetBackPattern__Off(Light_Back, NUM_LIGHTS_BACK);
 	
 	LoadAndSet_sounds();
 	
@@ -84,13 +96,33 @@ void ofApp::setup(){
 
 /******************************
 ******************************/
+bool ofApp::isFile_Exist(const char* FileName)
+{
+	FILE* fp = fopen(FileName, "r");
+	if(fp == nullptr){
+		return false;
+	}else{
+		fclose(fp);
+		
+		printf(">>> gui : load from file <<<\n");
+		fflush(stdout);
+		
+		return true;
+	}
+}
+
+/******************************
+******************************/
 void ofApp::LoadAndSet_sounds()
 {
+	setup_sound(sound_Ambient, "_SelectedSound/jg-032316-sfx-windy-planet-ambiance-4.wav", true, 0.0);
 	setup_sound(sound_Mysterious, "_SelectedSound/mysterious-dungeons-ambiance_GkvZUHVO.wav", true, 0.0);
 	setup_sound(sound_Quake, "_SelectedSound/lava-flowing_f1gkErVd.wav", true, 0.0);
 	setup_sound(sound_Magma, "_SelectedSound/flowing-magma-foley_MJC0mBNu.wav", true, 0.0);
 	setup_sound(sound_Thunder, "_SelectedSound/thunder-clap_z19asnEO.wav", false, 1.0);
 	setup_sound(sound_Dooon, "_SelectedSound/explosion-blast-large-bass-rumble_fk5jCFVu.wav", false, 1.0);
+	setup_sound(sound_Fire, "_SelectedSound/ab-f-031616-38568456_bonfire-burning-ambience-01.wav", true, 0.0);
+	setup_sound(sound_Climax, "_SelectedSound/Carmina Burana.wav", false, 0.0);
 }
 
 /******************************
@@ -115,8 +147,8 @@ void ofApp::sound_VolUp_AutoStart(ofSoundPlayer& sound, double step, double limi
 	if(!sound.isLoaded()) return;
 	
 	if(!sound.isPlaying()){
-		sound.setPosition(0);
 		sound.play();
+		sound.setPosition(0);
 	}
 	
 	float vol = sound.getVolume();
@@ -157,63 +189,72 @@ void ofApp::setup_Gui()
 
 /******************************
 ******************************/
-void ofApp::SetLightPattern__CheckLed()
+void ofApp::SetFrontPattern__CheckLed(LED_LIGHT* _LedLight, int _NUM_LEDS)
 {
-	for(int i = 0; i < NUM_LEDS; i++){
-		if(i == LedId_Test)	LedLight[i].LightPattern_Front.setup(now, 1.0);
-		else				LedLight[i].LightPattern_Front.setup(now, 0.0);
+	for(int i = 0; i < _NUM_LEDS; i++){
+		if(i == LedId_Test)	_LedLight[i].LightPattern_Front.setup(now, 1.0);
+		else				_LedLight[i].LightPattern_Front.setup(now, 0.0);
 	}
 }
 
 /******************************
 ******************************/
-void ofApp::SetLightPattern__On()
+void ofApp::SetFrontPattern__On(LED_LIGHT* _LedLight, int _NUM_LEDS)
 {
-	for(int i = 0; i < NUM_LEDS; i++){
-		LedLight[i].LightPattern_Front.setup(now, 1.0);
+	for(int i = 0; i < _NUM_LEDS; i++){
+		_LedLight[i].LightPattern_Front.setup(now, 1.0);
 	}
 }
 
 /******************************
 ******************************/
-void ofApp::SetLightPattern__Perlin()
+void ofApp::SetFrontPattern__Off(LED_LIGHT* _LedLight, int _NUM_LEDS)
 {
-	for(int i = 0; i < NUM_LEDS; i++){
+	for(int i = 0; i < _NUM_LEDS; i++){
+		_LedLight[i].LightPattern_Front.setup(now, 0.0);
+	}
+}
+
+/******************************
+******************************/
+void ofApp::SetFrontPattern__Perlin(LED_LIGHT* _LedLight, int _NUM_LEDS)
+{
+	for(int i = 0; i < _NUM_LEDS; i++){
 		// ofx_SET_LIGHTPATTERN::setup__Perlin(&LedLight[i].LightPattern_Front, now, 0, 1.0, 2000);
-		ofx_SET_LIGHTPATTERN::setup__Perlin(&LedLight[i].LightPattern_Front, now, -0.5, 1.5, 1000);
+		ofx_SET_LIGHTPATTERN::setup__Perlin(&_LedLight[i].LightPattern_Front, now, -0.5, 1.5, 1000);
 	}
 }
 
 /******************************
 ******************************/
-void ofApp::SetLightPattern__Strobe()
+void ofApp::SetFrontPattern__Strobe(LED_LIGHT* _LedLight, int _NUM_LEDS)
 {
-	for(int i = 0; i < NUM_LEDS; i++){
-		setup__RandomStrobe(&LedLight[i].LightPattern_Front, now, 0.0, 1.0);
+	for(int i = 0; i < _NUM_LEDS; i++){
+		setup__RandomStrobe(&_LedLight[i].LightPattern_Front, now, 0.0, 1.0, _NUM_LEDS);
 	}
 }
 
 /******************************
 ******************************/
-void ofApp::setup__RandomStrobe(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1)
+void ofApp::setup__RandomStrobe(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1, int NUM_LEDS)
 {
 	/********************
 	********************/
 	int d_d_ms = 33; // 1 strobeの鋭さ
-	int d_Transition_T_ms = d_eachState[STATE__QUAKE_RISE]/2; // 遷移時間
+	int d_Transition_T_ms = d_eachState[STATE__QUAKE_RISE] * 2/3; // 遷移時間
 	
 	/*
-	どの時間を見てもX個のLedが光っている(実際はRange内でRandom selectなので、期待値)
+	どの時間を見ても1個のLedが光っている(実際はRange内でRandom selectなので、期待値)
+		T = d_d_ms * NUM_LEDS / 1;
+		
+	どの時間を見てもX個のLedが光っている(期待値)
 		T = d_d_ms * NUM_LEDS / X;
 	
 	常に、全てのLedが光っている(期待値)
 		T = d_d_ms * NUM_LEDS / NUM_LEDS;
-		
-	0.5個(疎)なら
-		T = d_d_ms * NUM_LEDS / 0.5;
 	*/
 	ofx_LIGHTPATTERN::MIN_MAX_PAIR T_from( d_d_ms * NUM_LEDS/(max(NUM_LEDS/10, 1)), d_d_ms * NUM_LEDS/(max(NUM_LEDS/12, 1)) );
-	ofx_LIGHTPATTERN::MIN_MAX_PAIR T_to( d_d_ms * NUM_LEDS/(max(NUM_LEDS/5, 1)), d_d_ms * NUM_LEDS/(max(NUM_LEDS/2, 1)) );
+	ofx_LIGHTPATTERN::MIN_MAX_PAIR T_to( d_d_ms * NUM_LEDS/(max(NUM_LEDS/2, 1)), d_d_ms * NUM_LEDS/(max(NUM_LEDS/5, 1)) );
 	
 	/* */
 	LightPattern->setup(now_ms, L0, L1, 0, 0, d_d_ms, T_from, T_to, d_Transition_T_ms);
@@ -221,19 +262,19 @@ void ofApp::setup__RandomStrobe(ofx_LIGHTPATTERN* LightPattern, int now_ms, doub
 
 /******************************
 ******************************/
-void ofApp::SetLightPattern_Back__Off()
+void ofApp::SetBackPattern__Off(LED_LIGHT* _LedLight, int _NUM_LEDS)
 {
-	for(int i = 0; i < NUM_LEDS; i++){
-		LedLight[i].LightPattern_Back.setup(now, 0.0);
+	for(int i = 0; i < _NUM_LEDS; i++){
+		_LedLight[i].LightPattern_Back.setup(now, 0.0);
 	}
 }
 
 /******************************
 ******************************/
-void ofApp::SetLightPattern_Back__1Time_Flash()
+void ofApp::SetBackPattern__1Time_Flash(LED_LIGHT* _LedLight, int _NUM_LEDS, int d_d)
 {
-	for(int i = 0; i < NUM_LEDS; i++){
-		ofx_SET_LIGHTPATTERN::setup__1Time_Flash(&LedLight[i].LightPattern_Back, now, 0.0, 1.0, 600);
+	for(int i = 0; i < _NUM_LEDS; i++){
+		ofx_SET_LIGHTPATTERN::setup__1Time_Flash(&_LedLight[i].LightPattern_Back, now, 0.0, 1.0, d_d);
 	}
 }
 
@@ -241,12 +282,14 @@ void ofApp::SetLightPattern_Back__1Time_Flash()
 ******************************/
 void ofApp::DmxShutter_open()
 {
+	b_DmxShutter_Open = true;
 }
 
 /******************************
 ******************************/
 void ofApp::DmxShutter_close()
 {
+	b_DmxShutter_Open = false;
 }
 
 /******************************
@@ -279,8 +322,9 @@ void ofApp::TransitionTo_Wait(){
 	State = STATE__WAIT;
 	t_from = now;
 	
-	// SetLightPattern__On();
-	SetLightPattern_Back__Off();
+	// SetFrontPattern__On();
+	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
 	
 	DmxShutter_close();
 	
@@ -293,11 +337,16 @@ void ofApp::TransitionTo_CheckLed(){
 	State = STATE__CHECK_LED;
 	t_from = now;
 	
-	SetLightPattern__CheckLed();
-	SetLightPattern_Back__Off();
+	SetFrontPattern__CheckLed(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
 	LedId_Test = -1;
 	
-	vol_Ligt.set(1.0);
+	SetFrontPattern__On(Light_Climax, NUM_LIGHTS_CLIMAX);
+	SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
+	
+	vol_Ligt_Dynamic.set(1.0);
+	vol_Ligt_Climax.set(0.0);
+	vol_Ligt_Back.set(0.0);
 }
 
 /******************************
@@ -305,11 +354,18 @@ void ofApp::TransitionTo_CheckLed(){
 void ofApp::TransitionTo_ManualOn(){
 	State = STATE__MANUAL_ON;
 	t_from = now;
-	SetLightPattern__On();
-	SetLightPattern_Back__Off();
+	
 	DmxShutter_open();
 	
-	vol_Ligt.set(1.0);
+	SetFrontPattern__On(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	
+	SetFrontPattern__On(Light_Climax, NUM_LIGHTS_CLIMAX);
+	SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
+	
+	vol_Ligt_Dynamic.set(0.0);
+	vol_Ligt_Climax.set(1.0);
+	vol_Ligt_Back.set(0.0);
 }
 
 /******************************
@@ -317,7 +373,8 @@ void ofApp::TransitionTo_ManualOn(){
 void ofApp::TransitionTo_IntroRise(){
 	State = STATE__INTRO_RISE;
 	t_from = now;
-	SetLightPattern_Back__Off();
+	
+	DmxShutter_open();
 	
 	update_ColorOfFire();
 }
@@ -327,7 +384,6 @@ void ofApp::TransitionTo_IntroRise(){
 void ofApp::TransitionTo_IntroFall(){
 	State = STATE__INTRO_FALL;
 	t_from = now;
-	SetLightPattern_Back__Off();
 }
 
 /******************************
@@ -335,10 +391,17 @@ void ofApp::TransitionTo_IntroFall(){
 void ofApp::TransitionTo_QuakeRise(){
 	State = STATE__QUAKE_RISE;
 	t_from = now;
-	SetLightPattern__Perlin();
-	SetLightPattern_Back__Off();
+	
+	DmxShutter_open();
+	
+	SetFrontPattern__Perlin(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	
+	SetFrontPattern__On(Light_Climax, NUM_LIGHTS_CLIMAX);
+	SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
 	
 	update_ColorOfFire();
+	b_skip = true;
 }
 
 /******************************
@@ -346,7 +409,6 @@ void ofApp::TransitionTo_QuakeRise(){
 void ofApp::TransitionTo_QuakeFall(){
 	State = STATE__QUAKE_FALL;
 	t_from = now;
-	SetLightPattern_Back__Off();
 }
 
 /******************************
@@ -354,13 +416,26 @@ void ofApp::TransitionTo_QuakeFall(){
 void ofApp::TransitionTo_Magma(){
 	State = STATE__MAGMA;
 	t_from = now;
-	SetLightPattern__Strobe();
-	SetLightPattern_Back__1Time_Flash();
-	vol_Ligt.set(1.0);
 	
 	sound_Thunder.play();
 	
+	SetFrontPattern__Strobe(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetBackPattern__1Time_Flash(Light_Dynamic, NUM_LIGHTS_DYNAMIC, 600);
+	
+	SetFrontPattern__On(Light_Climax, NUM_LIGHTS_CLIMAX);
+	SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
+	
+	vol_Ligt_Dynamic.set(1.0);
+	// vol_Ligt_Climax.set(0.0);
+	// vol_Ligt_Back.set(0.0);
+	
 	update_ColorOfFire();
+	b_skip = false;
+	
+	if(sound_Climax.isPlaying()) sound_Climax.stop();
+	sound_Climax.play();
+	sound_Climax.setVolume(0);
+	sound_Climax.setPositionMS(69000);
 }
 
 /******************************
@@ -368,9 +443,33 @@ void ofApp::TransitionTo_Magma(){
 void ofApp::TransitionTo_Dark(){
 	State = STATE__DARK;
 	t_from = now;
-	SetLightPattern__On();
-	SetLightPattern_Back__Off();
-	vol_Ligt.set(0.0);
+	
+	SetFrontPattern__On(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	
+	SetFrontPattern__On(Light_Climax, NUM_LIGHTS_CLIMAX);
+	SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
+	
+	vol_Ligt_Dynamic.set(0.0);
+	vol_Ligt_Climax.set(0.0);
+	// vol_Ligt_Back.set(0.0);
+}
+
+/******************************
+******************************/
+void ofApp::TransitionTo_Flying(){
+	State = STATE__FLYING;
+	t_from = now;
+	
+	SetFrontPattern__On(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	
+	SetFrontPattern__On(Light_Climax, NUM_LIGHTS_CLIMAX);
+	SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
+	
+	vol_Ligt_Dynamic.set(0.0);
+	vol_Ligt_Climax.set(1.0);
+	// vol_Ligt_Back.set(0.0);
 }
 
 /******************************
@@ -378,16 +477,41 @@ void ofApp::TransitionTo_Dark(){
 void ofApp::TransitionTo_On(){
 	State = STATE__ON;
 	t_from = now;
-	SetLightPattern__On();
-	SetLightPattern_Back__Off();
-	vol_Ligt.set(1.0);
 	
-	DmxShutter_open();
+	SetFrontPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetBackPattern__1Time_Flash(Light_Dynamic, NUM_LIGHTS_DYNAMIC, 600);
+	
+	SetFrontPattern__On(Light_Climax, NUM_LIGHTS_CLIMAX);
+	SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
+	
+	vol_Ligt_Dynamic.set(1.0);
+	vol_Ligt_Climax.set(1.0);
+	vol_Ligt_Back.set(0.0);
 	
 	sound_Dooon.setVolume(1.0);
+	sound_Dooon.setPosition(0);
 	sound_Dooon.play();
 	
 	update_ColorOfFire();
+}
+
+/******************************
+******************************/
+void ofApp::TransitionTo_OnDialogue(){
+	State = STATE__ON_DIALOGUE;
+	t_from = now;
+	
+	c_toFadeOut = 0;
+	
+	SetFrontPattern__On(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	
+	SetFrontPattern__On(Light_Climax, NUM_LIGHTS_CLIMAX);
+	SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
+	
+	vol_Ligt_Dynamic.set(0.0);
+	vol_Ligt_Climax.set(1.0);
+	vol_Ligt_Back.set(0.0);
 }
 
 /******************************
@@ -402,24 +526,45 @@ void ofApp::TransitionTo_FadeOut(){
 void ofApp::StateChart(){
 	switch(State){
 		case STATE__WAIT:
-			if(b_key_CheckLed)					TransitionTo_CheckLed();
-			else if(b_key_Enter)				TransitionTo_ManualOn();
-			else if(XBC_State.Is_LedOn(now))	TransitionTo_IntroRise();
+			if( b_skip && (15000 < now - t_from) )	b_skip = false;
+			
+			if(b_key_CheckLed)							TransitionTo_CheckLed();
+			else if(b_key_Enter)						TransitionTo_ManualOn();
+			else if(XBC_State.Is_LedOn(now) && b_skip)	TransitionTo_QuakeRise();
+			else if(XBC_State.Is_LedOn(now) && !b_skip)	TransitionTo_IntroRise();
 			break;
 			
 		case STATE__CHECK_LED:
 			if(b_key_CheckLed){
 				TransitionTo_Wait();
-				SetLightPattern__On(); // ここは、明示的にsetする必要あり.
-				vol_Ligt.set(0.0);
+				
+				/* 明示的にsetする必要あり */
+				SetFrontPattern__On(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+				SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+				
+				SetFrontPattern__On(Light_Climax, NUM_LIGHTS_CLIMAX);
+				SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
+				
+				vol_Ligt_Dynamic.set(0.0);
+				vol_Ligt_Climax.set(0.0);
+				vol_Ligt_Back.set(0.0);
 			}
 			break;
 			
 		case STATE__MANUAL_ON:
 			if(b_key_Enter){
 				TransitionTo_Wait();
-				SetLightPattern__On(); // ここは、明示的にsetする必要あり.
-				vol_Ligt.set(0.0);
+				
+				/* 明示的にsetする必要あり */
+				SetFrontPattern__On(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+				SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+				
+				SetFrontPattern__On(Light_Climax, NUM_LIGHTS_CLIMAX);
+				SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
+				
+				vol_Ligt_Dynamic.set(0.0);
+				vol_Ligt_Climax.set(0.0);
+				vol_Ligt_Back.set(0.0);
 			}
 			break;
 			
@@ -448,11 +593,20 @@ void ofApp::StateChart(){
 			break;
 			
 		case STATE__DARK:
+			if(d_eachState[State] < now - t_from)		TransitionTo_Flying();
+			break;
+			
+		case STATE__FLYING:
 			if(d_eachState[State] < now - t_from)		TransitionTo_On();
 			break;
 			
 		case STATE__ON:
-			if(b_key_Enter)	TransitionTo_FadeOut();
+			if(d_eachState[State] < now - t_from)		TransitionTo_OnDialogue();
+			break;
+			
+		case STATE__ON_DIALOGUE:
+			if(b_key_Enter)	c_toFadeOut++;
+			if(2 <= c_toFadeOut)	TransitionTo_FadeOut();
 			break;
 			
 		case STATE__FADEOUT:
@@ -483,8 +637,19 @@ void ofApp::update(){
 	/* */
 	LED_PARAM col = get_ColorofFile();
 	
-	for(int i = 0; i < NUM_LEDS; i++){
-		LedLight[i].update(now, col, LED_PARAM(1.0, 1.0, 1.0, 1.0));
+	// ofxVec4Slider のmemberへのaccessは dotでなく->である点に注意
+	// これは単に、ofxVec4Sliderのoperatorでそう定義してあるため。
+	// if(State == STATE__CHECK_LED) col = LED_PARAM(0.0, 0.0, 1.0, 0.0);
+	if(State == STATE__CHECK_LED) col = LED_PARAM(Gui_Global->col_WhenTest->x, Gui_Global->col_WhenTest->y, Gui_Global->col_WhenTest->z, Gui_Global->col_WhenTest->w);
+	
+	for(int i = 0; i < NUM_LIGHTS_DYNAMIC; i++){
+		Light_Dynamic[i].update(now, col, LED_PARAM(1.0, 1.0, 1.0, 1.0));
+	}
+	for(int i = 0; i < NUM_LIGHTS_CLIMAX; i++){
+		Light_Climax[i].update(now, LED_PARAM(1.0, 0.6, 0.0, 0.0), LED_PARAM(1.0, 1.0, 1.0, 1.0));
+	}
+	for(int i = 0; i < NUM_LIGHTS_BACK; i++){
+		Light_Back[i].update(now, LED_PARAM(1.0, 1.0, 1.0, 1.0), LED_PARAM(1.0, 1.0, 1.0, 1.0));
 	}
 	
 	/* */
@@ -499,114 +664,225 @@ void ofApp::update(){
 }
 
 /******************************
-	ofSoundPlayer sound_Mysterious;
-	ofSoundPlayer sound_Quake;
-	ofSoundPlayer sound_Magma;
-
-void ofApp::sound_VolUp_AutoStart(ofSoundPlayer& sound, double step)
-void ofApp::sound_VolDown_AutoStop(ofSoundPlayer& sound, double step)
-
 ******************************/
 void ofApp::VolumeControl(){
-	const double step_slower	= 1.0/3000.0 * (now - t_Last);
-	const double step_slow		= 1.0/2000.0 * (now - t_Last);
+	const double volAmbient_max = 0.1; // 風音があまりうるさいと嫌なので.
+	const double volFire_max = 0.6;
+	const double volClimax_max = 1.0;
+	const double volClimax_Low = 0.7;
+	
+	const double step_slowest	= 1.0/d_eachState[STATE__MAGMA] * (now - t_Last);
+	const double step_slower	= 1.0/5000.0 * (now - t_Last);
+	const double step_slow		= 1.0/3000.0 * (now - t_Last);
 	const double step_norm		= 1.0/1000.0 * (now - t_Last);
 	const double step_fast		= 1.0/500.0 * (now - t_Last);
 	const double step_faster	= 1.0/200.0 * (now - t_Last);
 	
 	switch(State){
 		case STATE__WAIT:
-			vol_Ligt.VolDown(step_fast, 0.0);
-			if(vol_Ligt.get() <= 0)	SetLightPattern__On();
+			vol_Ligt_Dynamic.VolDown(step_fast, 0.0);
+			if(vol_Ligt_Dynamic.get() <= 0)	SetFrontPattern__On(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
 			
+			vol_Ligt_Climax.VolDown(step_fast);
+			vol_Ligt_Back.VolUp(step_slow, Gui_Global->volLight_Back_max);
+			
+			sound_VolUp_AutoStart(sound_Ambient, step_slow, volAmbient_max);
 			sound_VolDown_AutoStop(sound_Mysterious, step_slow);
-			sound_VolDown_AutoStop(sound_Quake, step_norm);
-			sound_VolDown_AutoStop(sound_Magma, step_norm);
-			sound_VolDown_AutoStop(sound_Dooon, step_norm);
+			sound_VolDown_AutoStop(sound_Quake, step_slow);
+			sound_VolDown_AutoStop(sound_Magma, step_slow);
+			sound_VolDown_AutoStop(sound_Dooon, step_slow);
+			sound_VolDown_AutoStop(sound_Fire, step_slow);
+			sound_VolDown_AutoStop(sound_Climax, step_slow);
+			
+			vol_mov_Calm.VolDown(step_slow);
+			vol_mov_Evil.VolDown(step_slow);
 			break;
 			
 		case STATE__CHECK_LED:
+			sound_VolDown_AutoStop(sound_Ambient, step_slow);
 			sound_VolDown_AutoStop(sound_Mysterious, step_slow);
 			sound_VolDown_AutoStop(sound_Quake, step_slow);
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
+			sound_VolDown_AutoStop(sound_Fire, step_slow);
+			sound_VolDown_AutoStop(sound_Climax, step_slow);
+			
+			vol_mov_Calm.VolDown(step_slow);
+			vol_mov_Evil.VolDown(step_slow);
 			break;
 			
 		case STATE__MANUAL_ON:
+			sound_VolDown_AutoStop(sound_Ambient, step_slow);
 			sound_VolDown_AutoStop(sound_Mysterious, step_slow);
 			sound_VolDown_AutoStop(sound_Quake, step_slow);
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
+			sound_VolDown_AutoStop(sound_Fire, step_slow);
+			sound_VolDown_AutoStop(sound_Climax, step_slow);
+			
+			vol_mov_Calm.set(1.0);
+			vol_mov_Evil.VolDown(step_slow);
 			break;
 			
 		case STATE__INTRO_RISE:
-			vol_Ligt.VolUp(step_fast, 0.5);
+			vol_Ligt_Dynamic.VolUp(step_fast, 0.5);
+			vol_Ligt_Climax.VolDown(step_slow);
+			vol_Ligt_Back.VolUp(step_slow, Gui_Global->volLight_Back_max);
 
-			sound_VolUp_AutoStart(sound_Mysterious, step_slow);
+			sound_VolDown_AutoStop(sound_Ambient, step_slow);
+			sound_VolUp_AutoStart(sound_Mysterious, step_slower);
 			sound_VolDown_AutoStop(sound_Quake, step_slow);
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
+			sound_VolDown_AutoStop(sound_Fire, step_slow);
+			sound_VolDown_AutoStop(sound_Climax, step_slow);
+			
+			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.VolUp(step_fast, 0.5); vol_mov_Evil.VolDown(step_fast); }
+			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolUp(step_fast, 0.5); }
+			else if(ColorId_of_Fire == COLOR_ID__BLACK)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolDown(step_fast); } // ないはず.
 			break;
 			
 		case STATE__INTRO_FALL:
-			vol_Ligt.VolDown(step_fast, 0.0);
+			vol_Ligt_Dynamic.VolDown(step_fast);
+			vol_Ligt_Climax.VolDown(step_fast);
+			vol_Ligt_Back.VolDown(step_fast);
 
+			sound_VolDown_AutoStop(sound_Ambient, step_slow);
 			sound_VolUp_AutoStart(sound_Mysterious, step_slow);
 			sound_VolUp_AutoStart(sound_Quake, step_slow, 0.5);
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
+			sound_VolDown_AutoStop(sound_Fire, step_slow);
+			sound_VolDown_AutoStop(sound_Climax, step_slow);
+			
+			vol_mov_Calm.VolDown(step_fast);
+			vol_mov_Evil.VolDown(step_fast);
 			break;
 			
 		case STATE__QUAKE_RISE:
-			vol_Ligt.VolUp(step_fast, 1.0);
+			vol_Ligt_Dynamic.VolUp(step_fast, 1.0);
+			vol_Ligt_Climax.VolDown(step_fast);
+			vol_Ligt_Back.VolDown(step_fast);
 
+			sound_VolDown_AutoStop(sound_Ambient, step_slow);
 			sound_VolUp_AutoStart(sound_Mysterious, step_slow);
 			sound_VolUp_AutoStart(sound_Quake, step_slow, 0.5);
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
+			sound_VolDown_AutoStop(sound_Fire, step_slow);
+			sound_VolDown_AutoStop(sound_Climax, step_slow);
+			
+			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.VolUp(step_fast); vol_mov_Evil.VolDown(step_fast); }
+			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolUp(step_fast); }
+			else if(ColorId_of_Fire == COLOR_ID__BLACK)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolDown(step_fast); } // ないはず.
 			break;
 			
 		case STATE__QUAKE_FALL:
-			vol_Ligt.VolDown(step_fast, 0.0);
+			vol_Ligt_Dynamic.VolDown(step_fast);
+			vol_Ligt_Climax.VolDown(step_fast);
+			vol_Ligt_Back.VolDown(step_fast);
 
+			sound_VolDown_AutoStop(sound_Ambient, step_slow);
 			sound_VolDown_AutoStop(sound_Mysterious, step_slow);
 			sound_VolUp_AutoStart(sound_Quake, step_slow);
 			sound_VolUp_AutoStart(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
+			sound_VolDown_AutoStop(sound_Fire, step_slow);
+			sound_VolDown_AutoStop(sound_Climax, step_slow);
+			
+			vol_mov_Calm.VolDown(step_fast);
+			vol_mov_Evil.VolDown(step_fast);
 			break;
 			
 		case STATE__MAGMA:
+			vol_Ligt_Climax.VolDown(step_fast);
+			vol_Ligt_Back.VolDown(step_fast);
+			
+			sound_VolDown_AutoStop(sound_Ambient, step_slow);
 			sound_VolDown_AutoStop(sound_Mysterious, step_slow);
 			sound_VolUp_AutoStart(sound_Quake, step_slow);
 			sound_VolUp_AutoStart(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
+			sound_VolDown_AutoStop(sound_Fire, step_slow);
+			sound_VolUp_AutoStart(sound_Climax, step_slowest, volClimax_max);
+			
+			{
+				const double T = 4000;
+				vol_mov_Calm.set(my_SinWave(T, 0, 0, 1));
+				vol_mov_Evil.set(my_SinWave(T, 135, 0, 1));
+			}
+			
 			break;
 			
 		case STATE__DARK:
+		case STATE__FLYING:
+			vol_Ligt_Back.VolUp(step_fast);
+			
+			sound_VolDown_AutoStop(sound_Ambient, step_fast);
 			sound_VolDown_AutoStop(sound_Mysterious, step_fast);
 			sound_VolDown_AutoStop(sound_Quake, step_fast);
 			sound_VolDown_AutoStop(sound_Magma, step_fast);
 			sound_VolDown_AutoStop(sound_Dooon, step_fast);
+			sound_VolDown_AutoStop(sound_Fire, step_fast);
+			sound_VolUp_AutoStart(sound_Climax, step_slowest, volClimax_max);
+			
+			vol_mov_Calm.VolDown(step_fast);
+			vol_mov_Evil.VolDown(step_fast);
 			break;
 			
 		case STATE__ON:
-			sound_VolDown_AutoStop(sound_Mysterious, step_faster);
-			sound_VolDown_AutoStop(sound_Quake, step_faster);
-			sound_VolDown_AutoStop(sound_Magma, step_faster);
+			sound_VolDown_AutoStop(sound_Ambient, step_fast);
+			sound_VolDown_AutoStop(sound_Mysterious, step_fast);
+			sound_VolDown_AutoStop(sound_Quake, step_fast);
+			sound_VolDown_AutoStop(sound_Magma, step_fast);
+			sound_VolUp_AutoStart(sound_Fire, step_slow, volFire_max);
+			sound_VolUp_AutoStart(sound_Climax, step_slowest, volClimax_max);
+			
+			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.set(1.0); vol_mov_Evil.VolDown(step_fast); }
+			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.set(1.0); }
+			else if(ColorId_of_Fire == COLOR_ID__BLACK)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolDown(step_fast); } // ないはず.
+			break;
+			
+		case STATE__ON_DIALOGUE:
+			sound_VolDown_AutoStop(sound_Ambient, step_fast);
+			sound_VolDown_AutoStop(sound_Mysterious, step_fast);
+			sound_VolDown_AutoStop(sound_Quake, step_fast);
+			sound_VolDown_AutoStop(sound_Magma, step_fast);
+			sound_VolUp_AutoStart(sound_Fire, step_slow, volFire_max);
+			sound_VolDown_AutoStop(sound_Climax, step_norm, volClimax_Low);
+			
+			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.set(1.0); vol_mov_Evil.VolDown(step_fast); }
+			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.set(1.0); }
+			else if(ColorId_of_Fire == COLOR_ID__BLACK)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolDown(step_fast); } // ないはず.
 			break;
 			
 		case STATE__FADEOUT:
-			vol_Ligt.VolDown(step_slow, 0.0);
+			vol_Ligt_Dynamic.VolDown(step_slow);
+			vol_Ligt_Climax.VolDown(step_slow);
+			vol_Ligt_Back.VolUp(step_slow, Gui_Global->volLight_Back_max);
 			
+			sound_VolUp_AutoStart(sound_Ambient, step_slow, volAmbient_max);
 			sound_VolDown_AutoStop(sound_Mysterious, step_slow);
 			sound_VolDown_AutoStop(sound_Quake, step_slow);
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
+			sound_VolDown_AutoStop(sound_Fire, step_slow);
+			sound_VolDown_AutoStop(sound_Climax, step_slow);
+			
+			vol_mov_Calm.VolDown(step_slow);
+			vol_mov_Evil.VolDown(step_slow);
 			break;
 			
 		default:
 			break;
 	}
+}
+
+/******************************
+******************************/
+double ofApp::my_SinWave(double T, double theta, double _min, double _max){
+	double dt = T/360.0 * theta;
+	return ofMap(sin(2 * PI * (now - dt) / T), -1, 1, _min, _max, true);
 }
 
 /******************************
@@ -630,8 +906,14 @@ void ofApp::draw(){
 	********************/
 	draw_info();
 	
-	sendDmx();
+	sendDmx_Shutter(b_DmxShutter_Open);
+	sendDmx_Light();
 	SendOSC();
+	
+	// printf("%5.3f\r", sound_Climax.getPosition());
+	// printf("%d\r", sound_Climax.getPositionMS());
+	printf("%5.2f\r", ofGetFrameRate());
+	fflush(stdout);
 	
 	/********************
 	********************/
@@ -643,7 +925,7 @@ void ofApp::draw(){
 void ofApp::update_ColorOfFire(){
 	if(XBC_State.Is_Calm(now))		ColorId_of_Fire = COLOR_ID__CALM; // in case of both Calm and Evil, system choose "Calm".
 	else if(XBC_State.Is_Evil(now))	ColorId_of_Fire = COLOR_ID__EVIL;
-	else							ColorId_of_Fire = COLOR_ID__BLACK;
+	// else							ColorId_of_Fire = COLOR_ID__BLACK; // no change.
 }
 
 /******************************
@@ -666,11 +948,25 @@ void ofApp::SendOSC(){
 	ofxOscMessage m;
 	m.setAddress("/XBE");
 	
-	m.addFloatArg((float)ColorId_of_Fire);
+	m.addFloatArg((float)vol_mov_Calm.get());
+	m.addFloatArg((float)vol_mov_Evil.get());
 	
 	/* */
 	Osc_Video_Nebuta.OscSend.sendMessage(m);
-	Osc_Video_Wall.OscSend.sendMessage(m);
+}
+
+/******************************
+******************************/
+void ofApp::SendOSC_Clear(){
+	/* */
+	ofxOscMessage m;
+	m.setAddress("/XBE");
+	
+	m.addFloatArg(0.0);
+	m.addFloatArg(0.0);
+	
+	/* */
+	Osc_Video_Nebuta.OscSend.sendMessage(m);
 }
 
 /******************************
@@ -686,7 +982,8 @@ void ofApp::draw_info()
 	
 	switch(State){
 		case STATE__WAIT:
-			sprintf(buf, "WAIT");
+			if(b_skip)	sprintf(buf, "WAIT to skip : %5d", (now - t_from)/1000);
+			else		sprintf(buf, "WAIT");
 			break;
 		case STATE__CHECK_LED:
 			sprintf(buf, "CHECK\nLedId = %3d", LedId_Test);
@@ -712,11 +1009,17 @@ void ofApp::draw_info()
 		case STATE__DARK:
 			sprintf(buf, "DARK");
 			break;
+		case STATE__FLYING:
+			sprintf(buf, "FLYING");
+			break;
 		case STATE__ON:
-			sprintf(buf, "ON : push Enter");
+			sprintf(buf, "ON");
+			break;
+		case STATE__ON_DIALOGUE:
+			sprintf(buf, "ON_DIALOGUE : push Enter x2 : %d", c_toFadeOut);
 			break;
 		case STATE__FADEOUT:
-			if(d_eachState[State] < now - t_from)	sprintf(buf, "FADEOUT:just a moment please.");
+			if(now - t_from < d_eachState[State])	sprintf(buf, "FADEOUT:just a moment please.");
 			else									sprintf(buf, "FADEOUT:move the Led away.");
 			break;
 		default:
@@ -764,31 +1067,58 @@ void ofApp::draw_info()
 	ofPopMatrix();
 }
 
+/******************************
+******************************/
+void ofApp::sendDmx_Shutter(bool b_open)
+{
+	if(b_open)	ode_Shutter.universe[0] = int(Gui_Global->DmxShutter_open);
+	else		ode_Shutter.universe[0] = int(Gui_Global->DmxShutter_close);
+	
+	ode_Shutter.SendDmx();
+}
 
 /******************************
 ******************************/
-void ofApp::sendDmx()
+void ofApp::sendDmx_Light()
 {
 	/********************
 	********************/
-	for(int i = 0; i < NUM_LEDS; i++){
-		switch(LedLight[i].LedDeviceType){
-			case LED_DEVICE_TYPE_FIXED:
-				// ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 0 ] = 255; // dimmer
-				ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 0 ] = int(255 * Gui_Global->Led_dimmer); // dimmer
-				ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 1 ] = ofMap(LedLight[i].LedParam_Out.r * vol_Ligt.get(), 0, 1.0, 0, 255, true);
-				ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 2 ] = ofMap(LedLight[i].LedParam_Out.g * vol_Ligt.get(), 0, 1.0, 0, 255, true);
-				ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 3 ] = ofMap(LedLight[i].LedParam_Out.b * vol_Ligt.get(), 0, 1.0, 0, 255, true);
-				ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 4 ] = ofMap(LedLight[i].LedParam_Out.w * vol_Ligt.get(), 0, 1.0, 0, 255, true);
-				ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 5 ] = 1; // Strobe = open.
-				
-				break;
-				
-			case LED_DEVICE_RGB:
-				break;
-				
-			default:
-				break;
+	for(int LightType = 0; LightType < 3; LightType++){
+		/* */
+		LED_LIGHT* LedLight;
+		int NUM_LEDS;
+		VOLUME* vol_Ligt;
+		
+		if(LightType == 0)		{ LedLight = Light_Dynamic; NUM_LEDS = NUM_LIGHTS_DYNAMIC; vol_Ligt = &vol_Ligt_Dynamic; }
+		else if(LightType == 1)	{ LedLight = Light_Climax; NUM_LEDS = NUM_LIGHTS_CLIMAX; vol_Ligt = &vol_Ligt_Climax; }
+		else if(LightType == 2)	{ LedLight = Light_Back; NUM_LEDS = NUM_LIGHTS_BACK; vol_Ligt = &vol_Ligt_Back; }
+		
+		/* */
+		for(int i = 0; i < NUM_LEDS; i++){
+			switch(LedLight[i].LedDeviceType){
+				case LED_DEVICE_TYPE_FIXED:
+					// ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 0 ] = 255; // dimmer
+					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 0 ] = int(255 * Gui_Global->Led_dimmer); // dimmer
+					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 1 ] = ofMap(LedLight[i].LedParam_Out.r * vol_Ligt->get(), 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 2 ] = ofMap(LedLight[i].LedParam_Out.g * vol_Ligt->get(), 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 3 ] = ofMap(LedLight[i].LedParam_Out.b * vol_Ligt->get(), 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 4 ] = ofMap(LedLight[i].LedParam_Out.w * vol_Ligt->get(), 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 5 ] = 1; // Strobe = open.
+					break;
+					
+				case LED_DEVICE_RGB:
+					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 0 ] = ofMap(LedLight[i].LedParam_Out.r * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 1 ] = ofMap(LedLight[i].LedParam_Out.g * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 2 ] = ofMap(LedLight[i].LedParam_Out.b * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
+					break;
+					
+				case LED_DEVICE_1CH:
+					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 0 ] = ofMap(LedLight[i].LedParam_Out.get_max() * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
+					break;
+					
+				default:
+					break;
+			}
 		}
 	}
 	
@@ -807,13 +1137,13 @@ void ofApp::keyPressed(int key){
 		case OF_KEY_DOWN:
 			LedId_Test--;
 			if(LedId_Test < -1) LedId_Test = -1;
-			SetLightPattern__CheckLed();
+			SetFrontPattern__CheckLed(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
 			break;
 			
 		case OF_KEY_UP:
 			LedId_Test++;
-			if(NUM_LEDS <= LedId_Test) LedId_Test = NUM_LEDS;			
-			SetLightPattern__CheckLed();
+			if(NUM_LIGHTS_DYNAMIC <= LedId_Test) LedId_Test = NUM_LIGHTS_DYNAMIC;			
+			SetFrontPattern__CheckLed(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
 			break;
 			
 		case OF_KEY_RETURN:

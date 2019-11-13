@@ -119,6 +119,15 @@ public:
 		
 		return LedParam;
 	}
+	
+	double get_max(){
+		double ret = r;
+		if(ret < g)	ret = g;
+		if(ret < b)	ret = b;
+		if(ret < w)	ret = w;
+		
+		return ret;
+	}
 };
 
 /**************************************************
@@ -160,8 +169,14 @@ struct LED_LIGHT{
 extern ODE ode[];
 extern const int NUM_ODES;
 
-extern LED_LIGHT LedLight[];
-extern const int NUM_LEDS;
+extern LED_LIGHT Light_Dynamic[];
+extern const int NUM_LIGHTS_DYNAMIC;
+
+extern LED_LIGHT Light_Climax[];
+extern const int NUM_LIGHTS_CLIMAX;
+
+extern LED_LIGHT Light_Back[];
+extern const int NUM_LIGHTS_BACK;
 
 
 

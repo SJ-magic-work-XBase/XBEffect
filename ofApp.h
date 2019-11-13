@@ -1,4 +1,17 @@
 /************************************************************
+■現物合わせ : Design調整
+・	StateChart : Flying -> ONでちょうどToshiba Ledが点灯し、AiFarm LedのFlashと重なるよう、d_eachState[STATE__FLYING] を調整する。
+・	曲合わせ : 元曲で"ボーン"の時間 = t_Boon
+	State = MagmaからONまでの時間を逆算し、TransitionTo_Magma() 内のsetpositionを変更する
+
+
+■setup
+・	最低限の照明状態で、WebCamSetting.appを起動し、設定値を作成する。
+・	XBCamの検知に邪魔にならない範囲で、且つVisualもいい感じの逆光になるよう、Gui_Global->volLight_Back_max をset.
+	XBaseの設置位置も同時に考える。
+
+■Boot
+・WebCamSetting.app : Panelを表示し、一旦defaultをsetし、再度、設定を読み込む
 ************************************************************/
 #pragma once
 
@@ -17,7 +30,6 @@
 /************************************************************
 ************************************************************/
 
-
 /**************************************************
 **************************************************/
 class ofApp : public ofBaseApp{
@@ -34,7 +46,9 @@ private:
 		STATE__QUAKE_FALL,
 		STATE__MAGMA,
 		STATE__DARK,
+		STATE__FLYING,
 		STATE__ON,
+		STATE__ON_DIALOGUE,
 		STATE__FADEOUT,
 		
 		NUM_STATE,
@@ -54,14 +68,16 @@ private:
 		0, // STATE__WAIT,
 		0, // STATE__CHECK_LED,
 		0, // STATE__MANUAL_ON,
-		3000, // STATE__INTRO_RISE,
+		4000, // STATE__INTRO_RISE,
 		1000, // STATE__INTRO_FALL,
 		6000, // STATE__QUAKE_RISE,
-		1000, // STATE__QUAKE_FALL,
+		2000, // STATE__QUAKE_FALL,
 		12000, // STATE__MAGMA,
-		1000, // STATE__DARK,
-		0, // STATE__ON,
-		2000, // STATE__FADEOUT,
+		200, // STATE__DARK,
+		800, // STATE__FLYING,
+		20000, // STATE__ON,
+		0, // STATE__ON_DIALOGUE,
+		3000, // STATE__FADEOUT,
 	};
 	
 	/****************************************
@@ -74,6 +90,8 @@ private:
 	int LedId_Test = -1;
 	
 	STATE State = STATE__WAIT;
+	
+	bool b_skip = false;
 	
 	int now = 0;
 	int t_Last = 0;
@@ -89,7 +107,9 @@ private:
 		LED_PARAM(255, 255, 255, 0), // STATE__QUAKE_FALL,
 		LED_PARAM(255, 255, 255, 0), // STATE__MAGMA,
 		LED_PARAM(255, 255, 255, 0), // STATE__DARK,
+		LED_PARAM(255, 255, 255, 0), // STATE__FLYING,
 		LED_PARAM(255, 255, 255, 0), // STATE__ON,
+		LED_PARAM(255, 255, 255, 0), // STATE__ON_DIALOGUE,
 		LED_PARAM(255, 255, 255, 0), // STATE__FADEOUT,
 	};
 	
@@ -97,38 +117,53 @@ private:
 	
 	/********************
 	********************/
+	ofSoundPlayer sound_Ambient;
 	ofSoundPlayer sound_Mysterious;
 	ofSoundPlayer sound_Quake;
 	ofSoundPlayer sound_Magma;
 	ofSoundPlayer sound_Thunder;
 	ofSoundPlayer sound_Dooon;
+	ofSoundPlayer sound_Fire;
+	ofSoundPlayer sound_Climax;
 	
 	/********************
 	********************/
-	VOLUME vol_Ligt;
+	ODE ode_Shutter = ODE("10.7.206.7");
+	bool b_DmxShutter_Open = false;
+	
+	/********************
+	********************/
+	VOLUME vol_Ligt_Dynamic;
+	VOLUME vol_Ligt_Climax;
+	VOLUME vol_Ligt_Back;
+	
+	VOLUME vol_mov_Calm;
+	VOLUME vol_mov_Evil;
 	
 	/********************
 	********************/
 	OSC_TARGET Osc_XBC;
 	OSC_TARGET Osc_Video_Nebuta;
-	OSC_TARGET Osc_Video_Wall;
 	
 	/********************
 	********************/
+	int c_toFadeOut = 0;
 	bool b_key_Enter = false;
 	bool b_key_CheckLed = false;
 
 	/****************************************
 	****************************************/
+	bool isFile_Exist(const char* FileName);
 	void DmxOut_AllBlack();
 	void setup_Gui();
-	void SetLightPattern__CheckLed();
-	void SetLightPattern__On();
-	void SetLightPattern__Perlin();
-	void SetLightPattern__Strobe();
-	void setup__RandomStrobe(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1);
-	void SetLightPattern_Back__Off();
-	void SetLightPattern_Back__1Time_Flash();
+	void SetFrontPattern__CheckLed(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetFrontPattern__On(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetFrontPattern__Off(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetFrontPattern__Perlin(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetFrontPattern__Strobe(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void setup__RandomStrobe(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1, int NUM_LEDS);
+	void SetBackPattern__Off(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetBackPattern__1Time_Flash(LED_LIGHT* _LedLight, int _NUM_LEDS, int d_d);
 	void TransitionTo_Wait();
 	void TransitionTo_CheckLed();
 	void TransitionTo_ManualOn();
@@ -138,14 +173,18 @@ private:
 	void TransitionTo_QuakeFall();
 	void TransitionTo_Magma();
 	void TransitionTo_Dark();
+	void TransitionTo_Flying();
 	void TransitionTo_On();
+	void TransitionTo_OnDialogue();
 	void TransitionTo_FadeOut();
 	void ReceiveOsc_from_XBC();
 	void DmxShutter_open();
 	void DmxShutter_close();
 	void draw_info();
-	void sendDmx();
+	void sendDmx_Light();
+	void sendDmx_Shutter(bool b_open);
 	void SendOSC();
+	void SendOSC_Clear();
 	void StateChart();
 	void VolumeControl();
 	void LoadAndSet_sounds();
@@ -154,6 +193,7 @@ private:
 	void sound_VolDown_AutoStop(ofSoundPlayer& sound, double step, double limit = 0.0);
 	void update_ColorOfFire();
 	LED_PARAM get_ColorofFile();
+	double my_SinWave(double T, double theta, double _min, double _max);
 	
 public:
 	/****************************************
@@ -164,6 +204,7 @@ public:
 	void setup();
 	void update();
 	void draw();
+	void exit();
 
 	void keyPressed(int key);
 	void keyReleased(int key);

@@ -29,11 +29,13 @@ public:
 	void VolUp(double step, double limit = 1.0){
 		vol += step;
 		if(limit < vol) vol = limit;
+		checkLimit();
 	}
 	
 	void VolDown(double step, double limit = 0.0){
 		vol -= step;
 		if(vol < limit) vol = limit;
+		checkLimit();
 	}
 };
 

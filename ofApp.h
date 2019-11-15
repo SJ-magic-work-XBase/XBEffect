@@ -124,7 +124,9 @@ private:
 	ofSoundPlayer sound_Thunder;
 	ofSoundPlayer sound_Dooon;
 	ofSoundPlayer sound_Fire;
-	ofSoundPlayer sound_Climax;
+	// ofSoundPlayer sound_Climax;
+	
+	SOUND_PAIR sound_Climax;
 	
 	/********************
 	********************/
@@ -133,9 +135,15 @@ private:
 	
 	/********************
 	********************/
-	VOLUME vol_Ligt_Dynamic;
-	VOLUME vol_Ligt_Climax;
-	VOLUME vol_Ligt_Back;
+	// VOLUME vol_Ligt_Dynamic;
+	VOLUME vol_Light_Eye;
+	VOLUME vol_Light_FaceUp;
+	VOLUME vol_Light_FaceLow;
+	VOLUME vol_Light_ArmUp;
+	VOLUME vol_Light_ArmLow;
+	
+	VOLUME vol_Light_Climax;
+	VOLUME vol_Light_Back;
 	
 	VOLUME vol_mov_Calm;
 	VOLUME vol_mov_Evil;
@@ -194,6 +202,10 @@ private:
 	void update_ColorOfFire();
 	LED_PARAM get_ColorofFile();
 	double my_SinWave(double T, double theta, double _min, double _max);
+	void volLightDynamic__set(double val);
+	void volLightDynamic__Down(double step, double limit = 0.0);
+	void volLightDynamic__Up(double step, double limit = 1.0);
+	bool volLightDynamic__IsZero();
 	
 public:
 	/****************************************

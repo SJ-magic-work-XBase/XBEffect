@@ -28,7 +28,22 @@ LED_LIGHT Light_Dynamic[] = {
 /*	9	*/	LED_LIGHT(	0	,	54	,	LED_DEVICE_TYPE_FIXED	),	//	55
 };											
 											
-const int NUM_LIGHTS_DYNAMIC = sizeof(Light_Dynamic) / sizeof(Light_Dynamic[0]);																												
+const int NUM_LIGHTS_DYNAMIC = sizeof(Light_Dynamic) / sizeof(Light_Dynamic[0]);											
+											
+LED_LIGHT* Light_Dynamic_Eye = &Light_Dynamic[0];											
+const int NUM_LIGHTS_EYE = 1;											
+											
+LED_LIGHT* Light_Dynamic_FaceUp = &Light_Dynamic[1];											
+const int NUM_LIGHTS_FACE_UP = 1;											
+											
+LED_LIGHT* Light_Dynamic_FaceLow = &Light_Dynamic[2];											
+const int NUM_LIGHTS_FACE_LOW = 1;											
+											
+LED_LIGHT* Light_Dynamic_ArmUp = &Light_Dynamic[3];											
+const int NUM_LIGHTS_ARM_UP = 1;											
+											
+LED_LIGHT* Light_Dynamic_ArmLow = &Light_Dynamic[4];											
+const int NUM_LIGHTS_ARM_LOW = 1;											
 
 #else
 

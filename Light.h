@@ -172,6 +172,22 @@ extern const int NUM_ODES;
 extern LED_LIGHT Light_Dynamic[];
 extern const int NUM_LIGHTS_DYNAMIC;
 
+extern LED_LIGHT* Light_Dynamic_Eye;
+extern const int NUM_LIGHTS_EYE;
+											
+extern LED_LIGHT* Light_Dynamic_FaceUp;
+extern const int NUM_LIGHTS_FACE_UP;
+											
+extern LED_LIGHT* Light_Dynamic_FaceLow;
+extern const int NUM_LIGHTS_FACE_LOW;
+											
+extern LED_LIGHT* Light_Dynamic_ArmUp;
+extern const int NUM_LIGHTS_ARM_UP;
+											
+extern LED_LIGHT* Light_Dynamic_ArmLow;
+extern const int NUM_LIGHTS_ARM_LOW;
+
+
 extern LED_LIGHT Light_Climax[];
 extern const int NUM_LIGHTS_CLIMAX;
 

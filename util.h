@@ -13,6 +13,80 @@
 
 /**************************************************
 **************************************************/
+class SOUND_PAIR : private Noncopyable{
+private:
+	ofSoundPlayer sound_Calm;
+	ofSoundPlayer sound_Evil;
+	
+	int PosStartMs_Calm;
+	int PosStartMs_Evil;
+	
+public:
+	SOUND_PAIR(string FileName_Calm, string FileName_Evil, int _PosStartMs_Calm, int _PosStartMs_Evil, bool b_Loop, double vol)
+	: PosStartMs_Calm(_PosStartMs_Calm)
+	, PosStartMs_Evil(_PosStartMs_Evil)
+	{
+		/* */
+		sound_Calm.load(FileName_Calm.c_str());
+		if(sound_Calm.isLoaded()){
+			sound_Calm.setLoop(b_Loop);
+			sound_Calm.setMultiPlay(true);
+			sound_Calm.setVolume(vol);
+		}else{
+			printf("%s load Error\n", FileName_Calm.c_str());
+			fflush(stdout);
+		}
+		
+		/* */
+		sound_Evil.load(FileName_Evil.c_str());
+		if(sound_Evil.isLoaded()){
+			sound_Evil.setLoop(b_Loop);
+			sound_Evil.setMultiPlay(true);
+			sound_Evil.setVolume(vol);
+		}else{
+			printf("%s load Error\n", FileName_Evil.c_str());
+			fflush(stdout);
+		}
+	}
+	
+	bool isPlaying(){
+		if( (sound_Calm.isPlaying()) || (sound_Evil.isPlaying()) )	return true;
+		else														return false;
+	}
+	
+	void stop(){
+		if(sound_Calm.isPlaying())	sound_Calm.stop();
+		if(sound_Evil.isPlaying())	sound_Evil.stop();
+	}
+	
+	void play(bool b_Calm){
+		if(b_Calm)	sound_Calm.play();
+		else		sound_Evil.play();
+	}
+	
+	void setVolume(bool b_Calm, double val){
+		if(b_Calm)	sound_Calm.setVolume(val);
+		else		sound_Evil.setVolume(val);
+	}
+	
+	void setPositionMS(bool b_Calm, int ms){
+		if(b_Calm)	sound_Calm.setPositionMS(ms);
+		else		sound_Evil.setPositionMS(ms);
+	}
+	
+	void setStartPositionMS(bool b_Calm){
+		if(b_Calm)	sound_Calm.setPositionMS(PosStartMs_Calm);
+		else		sound_Evil.setPositionMS(PosStartMs_Evil);
+	}
+	
+	ofSoundPlayer& getSound(bool b_Calm){
+		if(b_Calm)	return sound_Calm;
+		else		return sound_Evil;
+	}
+};
+
+/**************************************************
+**************************************************/
 class VOLUME : private Noncopyable{
 private:
 	double vol = 0;

@@ -69,11 +69,6 @@ public:
 		else		sound_Evil.setVolume(val);
 	}
 	
-	void setPositionMS(bool b_Calm, int ms){
-		if(b_Calm)	sound_Calm.setPositionMS(ms);
-		else		sound_Evil.setPositionMS(ms);
-	}
-	
 	void setStartPositionMS(bool b_Calm){
 		if(b_Calm)	sound_Calm.setPositionMS(PosStartMs_Calm);
 		else		sound_Evil.setPositionMS(PosStartMs_Evil);

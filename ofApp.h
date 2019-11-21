@@ -48,7 +48,10 @@ private:
 		STATE__DARK,
 		STATE__FLYING,
 		STATE__ON,
-		STATE__ON_DIALOGUE,
+		STATE__ON_DIALOGUE,	
+		STATE__FADE_TO_END,
+		STATE__NOSOUND,
+		STATE__ENDING,
 		STATE__FADEOUT,
 		
 		NUM_STATE,
@@ -73,10 +76,13 @@ private:
 		6000, // STATE__QUAKE_RISE,
 		2000, // STATE__QUAKE_FALL,
 		12000, // STATE__MAGMA,
-		200, // STATE__DARK,
-		800, // STATE__FLYING,
+		1000, // STATE__DARK,
+		1000, // STATE__FLYING,
 		20000, // STATE__ON,
-		0, // STATE__ON_DIALOGUE,
+		30000, // STATE__ON_DIALOGUE,
+		10000, // STATE__FADE_TO_END,
+		1000, // STATE__NOSOUND,
+		0, // STATE__ENDING,
 		3000, // STATE__FADEOUT,
 	};
 	
@@ -97,22 +103,6 @@ private:
 	int t_Last = 0;
 	int t_from = 0;
 	
-	const LED_PARAM LedCol_ofTheState[NUM_STATE] = {
-		LED_PARAM(255, 255, 255, 0), // STATE__WAIT,
-		LED_PARAM(255, 255, 255, 0), // STATE__CHECK_LED,
-		LED_PARAM(255, 255, 255, 0), // STATE__MANUAL_ON,
-		LED_PARAM(255, 255, 255, 0), // STATE__INTRO_RISE,
-		LED_PARAM(255, 255, 255, 0), // STATE__INTRO_FALL,
-		LED_PARAM(255, 255, 255, 0), // STATE__QUAKE_RISE,
-		LED_PARAM(255, 255, 255, 0), // STATE__QUAKE_FALL,
-		LED_PARAM(255, 255, 255, 0), // STATE__MAGMA,
-		LED_PARAM(255, 255, 255, 0), // STATE__DARK,
-		LED_PARAM(255, 255, 255, 0), // STATE__FLYING,
-		LED_PARAM(255, 255, 255, 0), // STATE__ON,
-		LED_PARAM(255, 255, 255, 0), // STATE__ON_DIALOGUE,
-		LED_PARAM(255, 255, 255, 0), // STATE__FADEOUT,
-	};
-	
 	ofTrueTypeFont font[NUM_FONTSIZE];
 	
 	/********************
@@ -124,9 +114,10 @@ private:
 	ofSoundPlayer sound_Thunder;
 	ofSoundPlayer sound_Dooon;
 	ofSoundPlayer sound_Fire;
-	// ofSoundPlayer sound_Climax;
 	
 	SOUND_PAIR sound_Climax;
+	SOUND_PAIR sound_Ending;
+	SOUND_PAIR sound_KimeEffect;
 	
 	/********************
 	********************/
@@ -167,9 +158,12 @@ private:
 	void SetFrontPattern__CheckLed(LED_LIGHT* _LedLight, int _NUM_LEDS);
 	void SetFrontPattern__On(LED_LIGHT* _LedLight, int _NUM_LEDS);
 	void SetFrontPattern__Off(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetFrontPattern__1Time_Flash(LED_LIGHT* _LedLight, int _NUM_LEDS, int d_d);
 	void SetFrontPattern__Perlin(LED_LIGHT* _LedLight, int _NUM_LEDS);
-	void SetFrontPattern__Strobe(LED_LIGHT* _LedLight, int _NUM_LEDS);
-	void setup__RandomStrobe(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1, int NUM_LEDS);
+	void SetFrontPattern__Strobe_magma(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetFrontPattern__Strobe_FadeToEnd(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void setup__RandomStrobe_magma(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1, int NUM_LEDS);
+	void setup__RandomStrobe_FadeToEnd(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1, int NUM_LEDS);
 	void SetBackPattern__Off(LED_LIGHT* _LedLight, int _NUM_LEDS);
 	void SetBackPattern__1Time_Flash(LED_LIGHT* _LedLight, int _NUM_LEDS, int d_d);
 	void TransitionTo_Wait();
@@ -184,6 +178,9 @@ private:
 	void TransitionTo_Flying();
 	void TransitionTo_On();
 	void TransitionTo_OnDialogue();
+	void TransitionTo_FadeToEnd();
+	void TransitionTo_NoSound();
+	void TransitionTo_Ending();
 	void TransitionTo_FadeOut();
 	void ReceiveOsc_from_XBC();
 	void DmxShutter_open();

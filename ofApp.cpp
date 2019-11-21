@@ -10,7 +10,10 @@
 ofApp::ofApp()
 : Osc_XBC("127.0.0.1", 12346, 12345)
 , Osc_Video_Nebuta("127.0.0.1", 12348, 12347)
-, sound_Climax("_SelectedSound/the-age-epic-full-01_f1YwY8N_.wav", "_SelectedSound/Carmina Burana.wav", 74000, 69000, false, 0.0)
+
+, sound_Climax("_SelectedSound/Climax_Calm/ssm-102518-V.Bellini-Norma-Cavatina-di-Norma.wav", "_SelectedSound/Climax_Evil/OVCL-00123 Track24-25  (96kHz-24bit).wav", 276000, 112200, false, 0.0)
+, sound_Ending("_SelectedSound/End/the-enemy-awaits_zJR6kQr_.wav", "_SelectedSound/End/heartbeat-scary-music_GkOY9NN_.wav", 40000, 0, false, 0.0)
+, sound_KimeEffect("_SelectedSound/AtKime/fireball-whoosh_GknWsSNu.wav", "_SelectedSound/AtKime/explosion-heavy_GyW9AoN_.wav", 0, 0, false, 0.0)
 {
 	/********************
 	********************/
@@ -123,8 +126,6 @@ void ofApp::LoadAndSet_sounds()
 	setup_sound(sound_Thunder, "_SelectedSound/thunder-clap_z19asnEO.wav", false, 1.0);
 	setup_sound(sound_Dooon, "_SelectedSound/explosion-blast-large-bass-rumble_fk5jCFVu.wav", false, 1.0);
 	setup_sound(sound_Fire, "_SelectedSound/ab-f-031616-38568456_bonfire-burning-ambience-01.wav", true, 0.0);
-	// setup_sound(sound_Climax, "_SelectedSound/Carmina Burana.wav", false, 0.0);
-	// setup_sound(sound_Climax, "_SelectedSound/the-age-epic-full-01_f1YwY8N_.wav", false, 0.0);
 }
 
 /******************************
@@ -219,6 +220,15 @@ void ofApp::SetFrontPattern__Off(LED_LIGHT* _LedLight, int _NUM_LEDS)
 
 /******************************
 ******************************/
+void ofApp::SetFrontPattern__1Time_Flash(LED_LIGHT* _LedLight, int _NUM_LEDS, int d_d)
+{
+	for(int i = 0; i < _NUM_LEDS; i++){
+		ofx_SET_LIGHTPATTERN::setup__1Time_Flash(&_LedLight[i].LightPattern_Front, now, 0.0, 1.0, d_d);
+	}
+}
+
+/******************************
+******************************/
 void ofApp::SetFrontPattern__Perlin(LED_LIGHT* _LedLight, int _NUM_LEDS)
 {
 	for(int i = 0; i < _NUM_LEDS; i++){
@@ -229,21 +239,30 @@ void ofApp::SetFrontPattern__Perlin(LED_LIGHT* _LedLight, int _NUM_LEDS)
 
 /******************************
 ******************************/
-void ofApp::SetFrontPattern__Strobe(LED_LIGHT* _LedLight, int _NUM_LEDS)
+void ofApp::SetFrontPattern__Strobe_magma(LED_LIGHT* _LedLight, int _NUM_LEDS)
 {
 	for(int i = 0; i < _NUM_LEDS; i++){
-		setup__RandomStrobe(&_LedLight[i].LightPattern_Front, now, 0.0, 1.0, _NUM_LEDS);
+		setup__RandomStrobe_magma(&_LedLight[i].LightPattern_Front, now, 0.0, 1.0, _NUM_LEDS);
 	}
 }
 
 /******************************
 ******************************/
-void ofApp::setup__RandomStrobe(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1, int NUM_LEDS)
+void ofApp::SetFrontPattern__Strobe_FadeToEnd(LED_LIGHT* _LedLight, int _NUM_LEDS)
+{
+	for(int i = 0; i < _NUM_LEDS; i++){
+		setup__RandomStrobe_FadeToEnd(&_LedLight[i].LightPattern_Front, now, 0.0, 1.0, _NUM_LEDS);
+	}
+}
+
+/******************************
+******************************/
+void ofApp::setup__RandomStrobe_magma(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1, int NUM_LEDS)
 {
 	/********************
 	********************/
 	int d_d_ms = 33; // 1 strobeの鋭さ
-	int d_Transition_T_ms = d_eachState[STATE__QUAKE_RISE] * 2/3; // 遷移時間
+	int d_Transition_T_ms = d_eachState[STATE__MAGMA] * 1/2; // 遷移時間
 	
 	/*
 	どの時間を見ても1個のLedが光っている(実際はRange内でRandom selectなので、期待値)
@@ -257,6 +276,32 @@ void ofApp::setup__RandomStrobe(ofx_LIGHTPATTERN* LightPattern, int now_ms, doub
 	*/
 	ofx_LIGHTPATTERN::MIN_MAX_PAIR T_from( d_d_ms * NUM_LEDS/(max(NUM_LEDS/10, 1)), d_d_ms * NUM_LEDS/(max(NUM_LEDS/12, 1)) );
 	ofx_LIGHTPATTERN::MIN_MAX_PAIR T_to( d_d_ms * NUM_LEDS/(max(NUM_LEDS/2, 1)), d_d_ms * NUM_LEDS/(max(NUM_LEDS/5, 1)) );
+	
+	/* */
+	LightPattern->setup(now_ms, L0, L1, 0, 0, d_d_ms, T_from, T_to, d_Transition_T_ms);
+}
+
+/******************************
+******************************/
+void ofApp::setup__RandomStrobe_FadeToEnd(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1, int NUM_LEDS)
+{
+	/********************
+	********************/
+	int d_d_ms = 33; // 1 strobeの鋭さ
+	int d_Transition_T_ms = d_eachState[STATE__FADE_TO_END]; // 遷移時間
+	
+	/*
+	どの時間を見ても1個のLedが光っている(実際はRange内でRandom selectなので、期待値)
+		T = d_d_ms * NUM_LEDS / 1;
+		
+	どの時間を見てもX個のLedが光っている(期待値)
+		T = d_d_ms * NUM_LEDS / X;
+	
+	常に、全てのLedが光っている(期待値)
+		T = d_d_ms * NUM_LEDS / NUM_LEDS;
+	*/
+	ofx_LIGHTPATTERN::MIN_MAX_PAIR T_from( d_d_ms * NUM_LEDS/(max(NUM_LEDS/2, 1)), d_d_ms * NUM_LEDS/(max(NUM_LEDS/5, 1)) );
+	ofx_LIGHTPATTERN::MIN_MAX_PAIR T_to( d_d_ms * NUM_LEDS/(max(NUM_LEDS/10, 1)), d_d_ms * NUM_LEDS/(max(NUM_LEDS/12, 1)) );
 	
 	/* */
 	LightPattern->setup(now_ms, L0, L1, 0, 0, d_d_ms, T_from, T_to, d_Transition_T_ms);
@@ -324,9 +369,7 @@ void ofApp::TransitionTo_Wait(){
 	State = STATE__WAIT;
 	t_from = now;
 	
-	// SetFrontPattern__On();
 	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
-	SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
 	
 	DmxShutter_close();
 	
@@ -419,7 +462,7 @@ void ofApp::TransitionTo_Magma(){
 	/* */
 	SetBackPattern__1Time_Flash(Light_Dynamic, NUM_LIGHTS_DYNAMIC, 600);
 	
-	SetFrontPattern__Strobe(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetFrontPattern__Strobe_magma(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
 	SetFrontPattern__On(Light_Dynamic_Eye, NUM_LIGHTS_EYE);
 	
 	/**/
@@ -464,9 +507,6 @@ void ofApp::TransitionTo_Flying(){
 	SetFrontPattern__On(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
 	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
 	
-	SetFrontPattern__On(Light_Climax, NUM_LIGHTS_CLIMAX);
-	SetBackPattern__Off(Light_Climax, NUM_LIGHTS_CLIMAX);
-	
 	vol_Light_Climax.set(1.0);
 }
 
@@ -496,8 +536,6 @@ void ofApp::TransitionTo_OnDialogue(){
 	State = STATE__ON_DIALOGUE;
 	t_from = now;
 	
-	c_toFadeOut = 0;
-	
 	SetFrontPattern__On(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
 	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
 	
@@ -508,9 +546,71 @@ void ofApp::TransitionTo_OnDialogue(){
 
 /******************************
 ******************************/
+void ofApp::TransitionTo_FadeToEnd(){
+	State = STATE__FADE_TO_END;
+	t_from = now;
+	
+	/* */
+	// SetFrontPattern__Strobe_FadeToEnd(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetFrontPattern__1Time_Flash(Light_Dynamic, NUM_LIGHTS_DYNAMIC, d_eachState[STATE__FADE_TO_END] * 3/4);
+	SetBackPattern__1Time_Flash(Light_Dynamic, NUM_LIGHTS_DYNAMIC, 600);
+	
+	SetFrontPattern__1Time_Flash(Light_Back, NUM_LIGHTS_BACK, 600);
+	SetBackPattern__1Time_Flash(Light_Back, NUM_LIGHTS_BACK, 600);
+	
+	/* */
+	volLightDynamic__set(1.0);
+	vol_Light_Climax.set(0.0);
+	vol_Light_Back.set(1.0);
+	
+	/* */
+	sound_KimeEffect.play(ColorId_of_Fire == COLOR_ID__CALM);
+	sound_KimeEffect.setVolume(ColorId_of_Fire == COLOR_ID__CALM, 1.0);
+	sound_KimeEffect.setStartPositionMS(ColorId_of_Fire == COLOR_ID__CALM);
+}
+
+/******************************
+******************************/
+void ofApp::TransitionTo_NoSound(){
+	State = STATE__NOSOUND;
+	t_from = now;
+	
+	/* */
+	SetFrontPattern__On(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	
+	SetFrontPattern__On(Light_Back, NUM_LIGHTS_BACK);
+	SetBackPattern__Off(Light_Back, NUM_LIGHTS_BACK);
+	
+	/* */
+	volLightDynamic__set(0.0);
+	vol_Light_Back.set(0.0);
+}
+
+/******************************
+******************************/
+void ofApp::TransitionTo_Ending(){
+	State = STATE__ENDING;
+	t_from = now;
+	
+	c_toFadeOut = 0;
+	
+	/* */
+	vol_Light_Climax.set(1.0);
+	
+	/* */
+	sound_Ending.play(ColorId_of_Fire == COLOR_ID__CALM);
+	sound_Ending.setVolume(ColorId_of_Fire == COLOR_ID__CALM, 0);
+	sound_Ending.setStartPositionMS(ColorId_of_Fire == COLOR_ID__CALM);
+}
+
+/******************************
+******************************/
 void ofApp::TransitionTo_FadeOut(){
 	State = STATE__FADEOUT;
 	t_from = now;
+	
+	DmxShutter_close();
 }
 
 /******************************
@@ -591,6 +691,18 @@ void ofApp::StateChart(){
 			break;
 			
 		case STATE__ON_DIALOGUE:
+			if(d_eachState[State] < now - t_from)		TransitionTo_FadeToEnd();
+			break;
+			
+		case STATE__FADE_TO_END:
+			if(d_eachState[State] < now - t_from)		TransitionTo_NoSound();
+			break;
+			
+		case STATE__NOSOUND:
+			if(d_eachState[State] < now - t_from)		TransitionTo_Ending();
+			break;
+			
+		case STATE__ENDING:
 			if(b_key_Enter)	c_toFadeOut++;
 			if(2 <= c_toFadeOut)	TransitionTo_FadeOut();
 			break;
@@ -690,17 +802,14 @@ bool ofApp::volLightDynamic__IsZero(){
 }
 
 /******************************
-	VOLUME vol_Light_Eye;
-	VOLUME vol_Light_FaceUp;
-	VOLUME vol_Light_FaceLow;
-	VOLUME vol_Light_ArmUp;
-	VOLUME vol_Light_ArmLow;
 ******************************/
 void ofApp::VolumeControl(){
 	const double volAmbient_max = 0.1; // 風音があまりうるさいと嫌なので.
 	const double volFire_max = 0.6;
 	const double volClimax_max = 1.0;
-	const double volClimax_Low = 0.7;
+	const double volClimax_Low_Calm = 0.5;
+	const double volClimax_Low_Evil = 1.0;
+	const double volEnding_max = 0.8;
 	
 	const double step_slowest	= 1.0/d_eachState[STATE__MAGMA] * (now - t_Last);
 	const double step_slower	= 1.0/5000.0 * (now - t_Last);
@@ -724,6 +833,7 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
 			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
 			
 			vol_mov_Calm.VolDown(step_slow);
 			vol_mov_Evil.VolDown(step_slow);
@@ -737,6 +847,7 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
 			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
 			
 			vol_mov_Calm.VolDown(step_slow);
 			vol_mov_Evil.VolDown(step_slow);
@@ -750,6 +861,7 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
 			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
 			
 			vol_mov_Calm.set(1.0);
 			vol_mov_Evil.VolDown(step_slow);
@@ -764,7 +876,7 @@ void ofApp::VolumeControl(){
 			
 			vol_Light_Climax.VolDown(step_slow);
 			vol_Light_Back.VolUp(step_slow, Gui_Global->volLight_Back_max);
-
+			
 			sound_VolDown_AutoStop(sound_Ambient, step_slow);
 			sound_VolUp_AutoStart(sound_Mysterious, step_slower);
 			sound_VolDown_AutoStop(sound_Quake, step_slow);
@@ -772,6 +884,7 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
 			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
 			
 			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.VolUp(step_fast, 0.5); vol_mov_Evil.VolDown(step_fast); }
 			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolUp(step_fast, 0.5); }
@@ -790,6 +903,7 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
 			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
 			
 			vol_mov_Calm.VolDown(step_fast);
 			vol_mov_Evil.VolDown(step_fast);
@@ -815,6 +929,7 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
 			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
 			
 			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.VolUp(step_fast); vol_mov_Evil.VolDown(step_fast); }
 			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolUp(step_fast); }
@@ -834,6 +949,7 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
 			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
 			
 			vol_mov_Calm.VolDown(step_fast);
 			vol_mov_Evil.VolDown(step_fast);
@@ -850,6 +966,7 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
 			sound_VolUp_AutoStart(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slowest, volClimax_max);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
 			
 			{
 				const double T = 4000;
@@ -871,6 +988,7 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Dooon, step_fast);
 			sound_VolDown_AutoStop(sound_Fire, step_fast);
 			sound_VolUp_AutoStart(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slowest, volClimax_max);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
 			
 			vol_mov_Calm.VolDown(step_fast);
 			vol_mov_Evil.VolDown(step_fast);
@@ -885,6 +1003,7 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Magma, step_fast);
 			sound_VolUp_AutoStart(sound_Fire, step_slow, volFire_max);
 			sound_VolUp_AutoStart(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slowest, volClimax_max);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
 			
 			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.set(1.0); vol_mov_Evil.VolDown(step_fast); }
 			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.set(1.0); }
@@ -899,11 +1018,53 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Quake, step_fast);
 			sound_VolDown_AutoStop(sound_Magma, step_fast);
 			sound_VolUp_AutoStart(sound_Fire, step_slow, volFire_max);
-			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_norm, volClimax_Low);
+			if(ColorId_of_Fire == COLOR_ID__CALM)	sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_norm, volClimax_Low_Calm);
+			else									sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_norm, volClimax_Low_Evil);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
 			
 			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.set(1.0); vol_mov_Evil.VolDown(step_fast); }
 			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.set(1.0); }
 			else if(ColorId_of_Fire == COLOR_ID__BLACK)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolDown(step_fast); } // ないはず.
+			break;
+			
+		case STATE__FADE_TO_END:
+		case STATE__NOSOUND:
+		{
+			const double step_climax = 1.0/d_eachState[STATE__FADE_TO_END] * (now - t_Last);
+			
+			sound_VolDown_AutoStop(sound_Ambient, step_fast);
+			sound_VolDown_AutoStop(sound_Mysterious, step_fast);
+			sound_VolDown_AutoStop(sound_Quake, step_fast);
+			sound_VolDown_AutoStop(sound_Magma, step_fast);
+			sound_VolUp_AutoStart(sound_Fire, step_slow, volFire_max);
+			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_climax, 0.0);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			
+			vol_mov_Calm.VolDown(step_climax);
+			vol_mov_Evil.VolDown(step_climax);
+		}
+			break;
+			
+		case STATE__ENDING:
+		{
+			const double step_Ending = 1.0/10000 * (now - t_Last);
+			
+			volLightDynamic__Down(step_fast);
+			vol_Light_Back.VolDown(step_fast);
+			
+			sound_VolDown_AutoStop(sound_Ambient, step_fast);
+			sound_VolDown_AutoStop(sound_Mysterious, step_fast);
+			sound_VolDown_AutoStop(sound_Quake, step_fast);
+			sound_VolDown_AutoStop(sound_Magma, step_fast);
+			sound_VolDown_AutoStop(sound_Dooon, step_fast);
+			sound_VolUp_AutoStart(sound_Fire, step_slow, volFire_max);
+			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_fast);
+			sound_VolUp_AutoStart(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_Ending, volEnding_max);
+			
+			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.VolUp(step_fast); vol_mov_Evil.VolDown(step_fast); }
+			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolUp(step_fast); }
+			else if(ColorId_of_Fire == COLOR_ID__BLACK)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolDown(step_fast); } // ないはず.
+		}
 			break;
 			
 		case STATE__FADEOUT:
@@ -918,6 +1079,7 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
 			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
 			
 			vol_mov_Calm.VolDown(step_slow);
 			vol_mov_Evil.VolDown(step_slow);
@@ -1066,7 +1228,16 @@ void ofApp::draw_info()
 			sprintf(buf, "ON");
 			break;
 		case STATE__ON_DIALOGUE:
-			sprintf(buf, "ON_DIALOGUE : push Enter x2 : %d", c_toFadeOut);
+			sprintf(buf, "ON_DIALOGUE");
+			break;
+		case STATE__FADE_TO_END:
+			sprintf(buf, "FADE_TO_END");
+			break;
+		case STATE__NOSOUND:
+			sprintf(buf, "NOSOUND");
+			break;
+		case STATE__ENDING:
+			sprintf(buf, "ENDING : push Enter x2 : %d", c_toFadeOut);
 			break;
 		case STATE__FADEOUT:
 			if(now - t_from < d_eachState[State])	sprintf(buf, "FADEOUT:just a moment please.");

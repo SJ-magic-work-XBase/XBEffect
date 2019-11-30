@@ -13,7 +13,7 @@ ofApp::ofApp()
 
 , sound_Climax("_SelectedSound/Climax_Calm/ssm-102518-V.Bellini-Norma-Cavatina-di-Norma.wav", "_SelectedSound/Climax_Evil/OVCL-00123 Track24-25  (96kHz-24bit).wav", 276000, 112200, false, 0.0)
 , sound_Ending("_SelectedSound/End/the-enemy-awaits_zJR6kQr_.wav", "_SelectedSound/End/heartbeat-scary-music_GkOY9NN_.wav", 40000, 0, false, 0.0)
-, sound_KimeEffect("_SelectedSound/AtKime/fireball-whoosh_GknWsSNu.wav", "_SelectedSound/AtKime/explosion-heavy_GyW9AoN_.wav", 0, 0, false, 0.0)
+, sound_KimeEffect("_SelectedSound/AtKime/fireball-whoosh_GknWsSNu.wav", "_SelectedSound/AtKime/explosion-blast-large-bass-rumble_fk5jCFVu.wav", 0, 0, false, 0.0)
 {
 	/********************
 	********************/
@@ -40,7 +40,6 @@ ofApp::~ofApp()
 	if(Gui_Global) delete Gui_Global;
 	
 	DmxOut_AllBlack();
-	sendDmx_Shutter(false);
 }
 
 /******************************
@@ -211,6 +210,15 @@ void ofApp::SetFrontPattern__On(LED_LIGHT* _LedLight, int _NUM_LEDS)
 
 /******************************
 ******************************/
+void ofApp::SetFrontPattern__On(LED_LIGHT* _LedLight, const int* id_list)
+{
+	for(int i = 0; id_list[i] != -1; i++){
+		_LedLight[id_list[i]].LightPattern_Front.setup(now, 1.0);
+	}
+}
+
+/******************************
+******************************/
 void ofApp::SetFrontPattern__Off(LED_LIGHT* _LedLight, int _NUM_LEDS)
 {
 	for(int i = 0; i < _NUM_LEDS; i++){
@@ -220,10 +228,28 @@ void ofApp::SetFrontPattern__Off(LED_LIGHT* _LedLight, int _NUM_LEDS)
 
 /******************************
 ******************************/
+void ofApp::SetFrontPattern__Off(LED_LIGHT* _LedLight, const int* id_list)
+{
+	for(int i = 0; id_list[i] != -1; i++){
+		_LedLight[id_list[i]].LightPattern_Front.setup(now, 0.0);
+	}
+}
+
+/******************************
+******************************/
 void ofApp::SetFrontPattern__1Time_Flash(LED_LIGHT* _LedLight, int _NUM_LEDS, int d_d)
 {
 	for(int i = 0; i < _NUM_LEDS; i++){
 		ofx_SET_LIGHTPATTERN::setup__1Time_Flash(&_LedLight[i].LightPattern_Front, now, 0.0, 1.0, d_d);
+	}
+}
+
+/******************************
+******************************/
+void ofApp::SetFrontPattern__1Time_Flash(LED_LIGHT* _LedLight, const int* id_list, int d_d)
+{
+	for(int i = 0; id_list[i] != -1; i++){
+		ofx_SET_LIGHTPATTERN::setup__1Time_Flash(&_LedLight[id_list[i]].LightPattern_Front, now, 0.0, 1.0, d_d);
 	}
 }
 
@@ -239,10 +265,31 @@ void ofApp::SetFrontPattern__Perlin(LED_LIGHT* _LedLight, int _NUM_LEDS)
 
 /******************************
 ******************************/
+void ofApp::SetFrontPattern__Perlin(LED_LIGHT* _LedLight, const int* id_list)
+{
+	for(int i = 0; id_list[i] != -1; i++){
+		ofx_SET_LIGHTPATTERN::setup__Perlin(&_LedLight[id_list[i]].LightPattern_Front, now, -0.5, 1.5, 1000);
+	}
+}
+
+/******************************
+******************************/
 void ofApp::SetFrontPattern__Strobe_magma(LED_LIGHT* _LedLight, int _NUM_LEDS)
 {
 	for(int i = 0; i < _NUM_LEDS; i++){
 		setup__RandomStrobe_magma(&_LedLight[i].LightPattern_Front, now, 0.0, 1.0, _NUM_LEDS);
+	}
+}
+
+/******************************
+******************************/
+void ofApp::SetFrontPattern__Strobe_magma(LED_LIGHT* _LedLight, const int* id_list)
+{
+	int _NUM_LEDS = 0;
+	for(_NUM_LEDS = 0; id_list[_NUM_LEDS] != -1; _NUM_LEDS++) {/* just count */}
+	
+	for(int i = 0; id_list[i] != -1; i++){
+		setup__RandomStrobe_magma(&_LedLight[id_list[i]].LightPattern_Front, now, 0.0, 1.0, _NUM_LEDS);
 	}
 }
 
@@ -257,12 +304,24 @@ void ofApp::SetFrontPattern__Strobe_FadeToEnd(LED_LIGHT* _LedLight, int _NUM_LED
 
 /******************************
 ******************************/
+void ofApp::SetFrontPattern__Strobe_FadeToEnd(LED_LIGHT* _LedLight, const int* id_list)
+{
+	int _NUM_LEDS = 0;
+	for(_NUM_LEDS = 0; id_list[_NUM_LEDS] != -1; _NUM_LEDS++) {/* just count */}
+	
+	for(int i = 0; id_list[i] != -1; i++){
+		setup__RandomStrobe_FadeToEnd(&_LedLight[id_list[i]].LightPattern_Front, now, 0.0, 1.0, _NUM_LEDS);
+	}
+}
+
+/******************************
+******************************/
 void ofApp::setup__RandomStrobe_magma(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1, int NUM_LEDS)
 {
 	/********************
 	********************/
 	int d_d_ms = 33; // 1 strobeの鋭さ
-	int d_Transition_T_ms = d_eachState[STATE__MAGMA] * 1/2; // 遷移時間
+	int d_Transition_T_ms = d_eachState[ColorId_of_Fire][STATE__MAGMA] * 1/2; // 遷移時間
 	
 	/*
 	どの時間を見ても1個のLedが光っている(実際はRange内でRandom selectなので、期待値)
@@ -288,7 +347,7 @@ void ofApp::setup__RandomStrobe_FadeToEnd(ofx_LIGHTPATTERN* LightPattern, int no
 	/********************
 	********************/
 	int d_d_ms = 33; // 1 strobeの鋭さ
-	int d_Transition_T_ms = d_eachState[STATE__FADE_TO_END]; // 遷移時間
+	int d_Transition_T_ms = d_eachState[ColorId_of_Fire][STATE__FADE_TO_END]; // 遷移時間
 	
 	/*
 	どの時間を見ても1個のLedが光っている(実際はRange内でRandom selectなので、期待値)
@@ -318,10 +377,28 @@ void ofApp::SetBackPattern__Off(LED_LIGHT* _LedLight, int _NUM_LEDS)
 
 /******************************
 ******************************/
+void ofApp::SetBackPattern__Off(LED_LIGHT* _LedLight, const int* id_list)
+{
+	for(int i = 0; id_list[i] != -1; i++){
+		_LedLight[id_list[i]].LightPattern_Back.setup(now, 0.0);
+	}
+}
+
+/******************************
+******************************/
 void ofApp::SetBackPattern__1Time_Flash(LED_LIGHT* _LedLight, int _NUM_LEDS, int d_d)
 {
 	for(int i = 0; i < _NUM_LEDS; i++){
 		ofx_SET_LIGHTPATTERN::setup__1Time_Flash(&_LedLight[i].LightPattern_Back, now, 0.0, 1.0, d_d);
+	}
+}
+
+/******************************
+******************************/
+void ofApp::SetBackPattern__1Time_Flash(LED_LIGHT* _LedLight, const int* id_list, int d_d)
+{
+	for(int i = 0; id_list[i] != -1; i++){
+		ofx_SET_LIGHTPATTERN::setup__1Time_Flash(&_LedLight[id_list[i]].LightPattern_Back, now, 0.0, 1.0, d_d);
 	}
 }
 
@@ -434,10 +511,11 @@ void ofApp::TransitionTo_QuakeRise(){
 	DmxShutter_open();
 	
 	/* */
-	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
+	SetFrontPattern__Perlin(Light_Dynamic, id_Intro);
+	SetFrontPattern__Perlin(Light_Dynamic, id_QuakeH);
+	SetFrontPattern__On(Light_Dynamic, id_Face);
 	
-	SetFrontPattern__Perlin(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
-	SetFrontPattern__On(Light_Dynamic_Eye, NUM_LIGHTS_EYE);
+	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
 	
 	/* */
 	update_ColorOfFire();
@@ -460,10 +538,8 @@ void ofApp::TransitionTo_Magma(){
 	sound_Thunder.play();
 	
 	/* */
-	SetBackPattern__1Time_Flash(Light_Dynamic, NUM_LIGHTS_DYNAMIC, 600);
-	
 	SetFrontPattern__Strobe_magma(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
-	SetFrontPattern__On(Light_Dynamic_Eye, NUM_LIGHTS_EYE);
+	SetBackPattern__1Time_Flash(Light_Dynamic, NUM_LIGHTS_DYNAMIC, 600);	
 	
 	/**/
 	volLightDynamic__set(1.0);
@@ -475,8 +551,8 @@ void ofApp::TransitionTo_Magma(){
 	
 	if(sound_Climax.isPlaying()) sound_Climax.stop();
 	sound_Climax.play(ColorId_of_Fire == COLOR_ID__CALM);
-	sound_Climax.setVolume(ColorId_of_Fire == COLOR_ID__CALM, 0);
-	sound_Climax.setStartPositionMS(ColorId_of_Fire == COLOR_ID__CALM);
+	sound_Climax.setVolume(0);
+	sound_Climax.setStartPositionMS();
 }
 
 /******************************
@@ -488,12 +564,7 @@ void ofApp::TransitionTo_Dark(){
 	SetFrontPattern__On(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
 	SetBackPattern__Off(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
 	
-	// vol_Light_Eye.set(val);
-	vol_Light_FaceUp.set(0.0);
-	vol_Light_FaceLow.set(0.0);
-	vol_Light_ArmUp.set(0.0);
-	vol_Light_ArmLow.set(0.0);
-	
+	volLightDynamic__set(0.0);
 	vol_Light_Climax.set(0.0);
 	// vol_Light_Back.set(0.0);
 }
@@ -522,12 +593,19 @@ void ofApp::TransitionTo_On(){
 	volLightDynamic__set(1.0);
 	vol_Light_Climax.set(1.0);
 	// vol_Light_Back.set(0.0);
+	vol_Light_Vol.set(1.0);
 	
 	sound_Dooon.setVolume(1.0);
 	sound_Dooon.setPosition(0);
 	sound_Dooon.play();
 	
 	// update_ColorOfFire();
+	
+	/********************
+	********************/
+	t_NebutaVoice_Zero = now;
+	NebutaVoiceId = 0;
+	b_NebutaVoiceEnd = false;
 }
 
 /******************************
@@ -551,8 +629,7 @@ void ofApp::TransitionTo_FadeToEnd(){
 	t_from = now;
 	
 	/* */
-	// SetFrontPattern__Strobe_FadeToEnd(Light_Dynamic, NUM_LIGHTS_DYNAMIC);
-	SetFrontPattern__1Time_Flash(Light_Dynamic, NUM_LIGHTS_DYNAMIC, d_eachState[STATE__FADE_TO_END] * 3/4);
+	SetFrontPattern__1Time_Flash(Light_Dynamic, NUM_LIGHTS_DYNAMIC, d_eachState[ColorId_of_Fire][STATE__FADE_TO_END] * 3/4);
 	SetBackPattern__1Time_Flash(Light_Dynamic, NUM_LIGHTS_DYNAMIC, 600);
 	
 	SetFrontPattern__1Time_Flash(Light_Back, NUM_LIGHTS_BACK, 600);
@@ -565,8 +642,12 @@ void ofApp::TransitionTo_FadeToEnd(){
 	
 	/* */
 	sound_KimeEffect.play(ColorId_of_Fire == COLOR_ID__CALM);
-	sound_KimeEffect.setVolume(ColorId_of_Fire == COLOR_ID__CALM, 1.0);
-	sound_KimeEffect.setStartPositionMS(ColorId_of_Fire == COLOR_ID__CALM);
+	sound_KimeEffect.setVolume(1.0);
+	sound_KimeEffect.setStartPositionMS();
+	
+	NebutaVoice[NUM_VOICES - 1].play(ColorId_of_Fire == COLOR_ID__CALM);
+	NebutaVoice[NUM_VOICES - 1].setVolume(1.0);
+	NebutaVoice[NUM_VOICES - 1].setStartPositionMS();
 }
 
 /******************************
@@ -600,8 +681,8 @@ void ofApp::TransitionTo_Ending(){
 	
 	/* */
 	sound_Ending.play(ColorId_of_Fire == COLOR_ID__CALM);
-	sound_Ending.setVolume(ColorId_of_Fire == COLOR_ID__CALM, 0);
-	sound_Ending.setStartPositionMS(ColorId_of_Fire == COLOR_ID__CALM);
+	sound_Ending.setVolume(0);
+	sound_Ending.setStartPositionMS();
 }
 
 /******************************
@@ -656,50 +737,50 @@ void ofApp::StateChart(){
 			
 		case STATE__INTRO_RISE:
 			if(!XBC_State.Is_LedOn(now))				TransitionTo_Wait();
-			else if(d_eachState[State] < now - t_from)	TransitionTo_IntroFall();
+			else if(d_eachState[ColorId_of_Fire][State] < now - t_from)	TransitionTo_IntroFall();
 			break;
 			
 		case STATE__INTRO_FALL:
 			if(!XBC_State.Is_LedOn(now))				TransitionTo_Wait();
-			else if(d_eachState[State] < now - t_from)	TransitionTo_QuakeRise();
+			else if(d_eachState[ColorId_of_Fire][State] < now - t_from)	TransitionTo_QuakeRise();
 			break;
 			
 		case STATE__QUAKE_RISE:
 			if(!XBC_State.Is_LedOn(now))				TransitionTo_Wait();
-			else if(d_eachState[State] < now - t_from)	TransitionTo_QuakeFall();
+			else if(d_eachState[ColorId_of_Fire][State] < now - t_from)	TransitionTo_QuakeFall();
 			break;
 			
 		case STATE__QUAKE_FALL:
 			if(!XBC_State.Is_LedOn(now))				TransitionTo_Wait();
-			else if(d_eachState[State] < now - t_from)	TransitionTo_Magma();
+			else if(d_eachState[ColorId_of_Fire][State] < now - t_from)	TransitionTo_Magma();
 			break;
 			
 		case STATE__MAGMA:
-			if(d_eachState[State] < now - t_from)		TransitionTo_Dark();
+			if(d_eachState[ColorId_of_Fire][State] < now - t_from)		TransitionTo_Dark();
 			break;
 			
 		case STATE__DARK:
-			if(d_eachState[State] < now - t_from)		TransitionTo_Flying();
+			if(d_eachState[ColorId_of_Fire][State] < now - t_from)		TransitionTo_Flying();
 			break;
 			
 		case STATE__FLYING:
-			if(d_eachState[State] < now - t_from)		TransitionTo_On();
+			if(d_eachState[ColorId_of_Fire][State] < now - t_from)		TransitionTo_On();
 			break;
 			
 		case STATE__ON:
-			if(d_eachState[State] < now - t_from)		TransitionTo_OnDialogue();
+			if(d_eachState[ColorId_of_Fire][State] < now - t_from)		TransitionTo_OnDialogue();
 			break;
 			
 		case STATE__ON_DIALOGUE:
-			if(d_eachState[State] < now - t_from)		TransitionTo_FadeToEnd();
+			if(d_eachState[ColorId_of_Fire][State] < now - t_from)		TransitionTo_FadeToEnd();
 			break;
 			
 		case STATE__FADE_TO_END:
-			if(d_eachState[State] < now - t_from)		TransitionTo_NoSound();
+			if(d_eachState[ColorId_of_Fire][State] < now - t_from)		TransitionTo_NoSound();
 			break;
 			
 		case STATE__NOSOUND:
-			if(d_eachState[State] < now - t_from)		TransitionTo_Ending();
+			if(d_eachState[ColorId_of_Fire][State] < now - t_from)		TransitionTo_Ending();
 			break;
 			
 		case STATE__ENDING:
@@ -708,7 +789,7 @@ void ofApp::StateChart(){
 			break;
 			
 		case STATE__FADEOUT:
-			if((d_eachState[State] < now - t_from) && !XBC_State.Is_LedOn(now))		TransitionTo_Wait();
+			if((d_eachState[ColorId_of_Fire][State] < now - t_from) && !XBC_State.Is_LedOn(now))		TransitionTo_Wait();
 			break;
 			
 		default:
@@ -750,8 +831,15 @@ void ofApp::update(){
 		Light_Back[i].update(now, LED_PARAM(1.0, 1.0, 1.0, 1.0), LED_PARAM(1.0, 1.0, 1.0, 1.0));
 	}
 	
+	float VolOfSound = Cal_VolOfSound();
+	for(int i = 0; i < NUM_LIGHTS_VOL; i++){
+		Light_Volume[i].update_direct(VolOfSound, col);
+	}
+	
 	/* */
 	VolumeControl();
+	
+	ControlNebutaVoice();
 	
 	/********************
 	********************/
@@ -763,38 +851,78 @@ void ofApp::update(){
 
 /******************************
 ******************************/
+void ofApp::ControlNebutaVoice(){
+	/********************
+	********************/
+	if( (State != STATE__ON) && (State != STATE__ON_DIALOGUE) )	return;
+	
+	/********************
+	********************/
+	if(b_NebutaVoiceEnd) return;
+	
+	int t_NebutaVoice = now - t_NebutaVoice_Zero;
+	
+	int* t_NebutaVoiceStart;
+	if(ColorId_of_Fire == COLOR_ID__CALM)	t_NebutaVoiceStart = t_NebutaVoiceStart_Calm;
+	else									t_NebutaVoiceStart = t_NebutaVoiceStart_Evil;
+	
+	if(t_NebutaVoiceStart[NebutaVoiceId] <= t_NebutaVoice){
+		NebutaVoice[NebutaVoiceId].play(ColorId_of_Fire == COLOR_ID__CALM);
+		NebutaVoice[NebutaVoiceId].setVolume(1.0);
+		NebutaVoice[NebutaVoiceId].setStartPositionMS();
+		
+		NebutaVoiceId++;
+		if(NUM_VOICES - 1 <= NebutaVoiceId) b_NebutaVoiceEnd = true;
+	}
+}
+
+/******************************
+******************************/
+float ofApp::Cal_VolOfSound(){
+	float alpha;
+	if(Gui_Global->Smooth_dt <= 0)	alpha = 1.0;
+	else							alpha = 1/Gui_Global->Smooth_dt * (now - t_Last);
+	
+	float * val = ofSoundGetSpectrum(1);
+	float Vol = ofMap(val[0], 0, Gui_Global->fft_map_max, 0, 1.0, true);
+	printf("%7.3f\r", val[0]);
+	fflush(stdout);
+	
+	Vol = alpha * Vol + (1 - alpha) * LastVol_of_Sound;
+	
+	LastVol_of_Sound = Vol;
+	
+	return Vol;
+}
+
+/******************************
+******************************/
 void ofApp::volLightDynamic__set(double val){
-	vol_Light_Eye.set(val);
-	vol_Light_FaceUp.set(val);
-	vol_Light_FaceLow.set(val);
-	vol_Light_ArmUp.set(val);
-	vol_Light_ArmLow.set(val);
+	vol_Light_Intro.set(val);
+	vol_Light_QuakeH.set(val);
+	vol_Light_Face.set(val);
 }
 
 /******************************
 ******************************/
 void ofApp::volLightDynamic__Down(double step, double limit){
-	vol_Light_Eye.VolDown(step, limit);
-	vol_Light_FaceUp.VolDown(step, limit);
-	vol_Light_FaceLow.VolDown(step, limit);
-	vol_Light_ArmUp.VolDown(step, limit);
-	vol_Light_ArmLow.VolDown(step, limit);
+	vol_Light_Intro.VolDown(step, limit);
+	vol_Light_QuakeH.VolDown(step, limit);
+	vol_Light_Face.VolDown(step, limit);
 }
 
 /******************************
 ******************************/
 void ofApp::volLightDynamic__Up(double step, double limit){
-	vol_Light_Eye.VolUp(step, limit);
-	vol_Light_FaceUp.VolUp(step, limit);
-	vol_Light_FaceLow.VolUp(step, limit);
-	vol_Light_ArmUp.VolUp(step, limit);
-	vol_Light_ArmLow.VolUp(step, limit);
+	vol_Light_Intro.VolUp(step, limit);
+	vol_Light_QuakeH.VolUp(step, limit);
+	vol_Light_Face.VolUp(step, limit);
 }
 
 /******************************
 ******************************/
 bool ofApp::volLightDynamic__IsZero(){
-	if( (vol_Light_Eye.get() <= 0) && (vol_Light_FaceUp.get() <= 0) && (vol_Light_FaceLow.get() <= 0) && (vol_Light_ArmUp.get() <= 0) && (vol_Light_ArmLow.get() <= 0) ){
+	if( (vol_Light_Intro.get() <= 0) && (vol_Light_QuakeH.get() <= 0) && (vol_Light_Face.get() <= 0) ){
 		return true;
 	}else{
 		return false;
@@ -806,12 +934,12 @@ bool ofApp::volLightDynamic__IsZero(){
 void ofApp::VolumeControl(){
 	const double volAmbient_max = 0.1; // 風音があまりうるさいと嫌なので.
 	const double volFire_max = 0.6;
-	const double volClimax_max = 1.0;
-	const double volClimax_Low_Calm = 0.5;
-	const double volClimax_Low_Evil = 1.0;
-	const double volEnding_max = 0.8;
+	const double volClimax_max = 0.9;
+	const double volClimax_Low_Calm = 0.05;
+	const double volClimax_Low_Evil = 0.8;
+	const double volEnding_max = 0.7;
 	
-	const double step_slowest	= 1.0/d_eachState[STATE__MAGMA] * (now - t_Last);
+	const double step_slowest	= 1.0/d_eachState[ColorId_of_Fire][STATE__MAGMA] * (now - t_Last);
 	const double step_slower	= 1.0/5000.0 * (now - t_Last);
 	const double step_slow		= 1.0/3000.0 * (now - t_Last);
 	const double step_norm		= 1.0/1000.0 * (now - t_Last);
@@ -825,6 +953,7 @@ void ofApp::VolumeControl(){
 			
 			vol_Light_Climax.VolDown(step_fast);
 			vol_Light_Back.VolUp(step_slow, Gui_Global->volLight_Back_max);
+			vol_Light_Vol.VolDown(step_fast);
 			
 			sound_VolUp_AutoStart(sound_Ambient, step_slow, volAmbient_max);
 			sound_VolDown_AutoStop(sound_Mysterious, step_slow);
@@ -832,8 +961,8 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
-			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_Climax.VolDown(step_slow);
+			sound_Ending.VolDown(step_slow);
 			
 			vol_mov_Calm.VolDown(step_slow);
 			vol_mov_Evil.VolDown(step_slow);
@@ -846,8 +975,8 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
-			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_Climax.VolDown(step_slow);
+			sound_Ending.VolDown(step_slow);
 			
 			vol_mov_Calm.VolDown(step_slow);
 			vol_mov_Evil.VolDown(step_slow);
@@ -860,22 +989,21 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
-			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_Climax.VolDown(step_slow);
+			sound_Ending.VolDown(step_slow);
 			
 			vol_mov_Calm.set(1.0);
 			vol_mov_Evil.VolDown(step_slow);
 			break;
 			
 		case STATE__INTRO_RISE:
-			vol_Light_Eye.VolUp(step_fast, 1.0);
-			vol_Light_FaceUp.VolDown(step_fast, 0.0);
-			vol_Light_FaceLow.VolDown(step_fast, 0.0);
-			vol_Light_ArmUp.VolDown(step_fast, 0.0);
-			vol_Light_ArmLow.VolDown(step_fast, 0.0);
+			vol_Light_Intro.VolUp(step_fast, 1.0);
+			vol_Light_QuakeH.VolDown(step_fast, 0.0);
+			vol_Light_Face.VolDown(step_fast, 0.0);
 			
-			vol_Light_Climax.VolDown(step_slow);
+			vol_Light_Climax.VolDown(step_fast);
 			vol_Light_Back.VolUp(step_slow, Gui_Global->volLight_Back_max);
+			vol_Light_Vol.VolDown(step_fast);
 			
 			sound_VolDown_AutoStop(sound_Ambient, step_slow);
 			sound_VolUp_AutoStart(sound_Mysterious, step_slower);
@@ -883,8 +1011,8 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
-			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_Climax.VolDown(step_slow);
+			sound_Ending.VolDown(step_slow);
 			
 			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.VolUp(step_fast, 0.5); vol_mov_Evil.VolDown(step_fast); }
 			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolUp(step_fast, 0.5); }
@@ -895,6 +1023,7 @@ void ofApp::VolumeControl(){
 			volLightDynamic__Down(step_fast);
 			vol_Light_Climax.VolDown(step_fast);
 			vol_Light_Back.VolDown(step_fast);
+			vol_Light_Vol.VolDown(step_fast);
 
 			sound_VolDown_AutoStop(sound_Ambient, step_slow);
 			sound_VolUp_AutoStart(sound_Mysterious, step_slow);
@@ -902,8 +1031,8 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
-			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_Climax.VolDown(step_slow);
+			sound_Ending.VolDown(step_slow);
 			
 			vol_mov_Calm.VolDown(step_fast);
 			vol_mov_Evil.VolDown(step_fast);
@@ -911,16 +1040,15 @@ void ofApp::VolumeControl(){
 			
 		case STATE__QUAKE_RISE:
 		{
-			const double step_slow_Quake = 1.0/d_eachState[STATE__QUAKE_RISE] * (now - t_Last);
+			const double step_slow_Quake = 1.0/d_eachState[ColorId_of_Fire][STATE__QUAKE_RISE] * (now - t_Last);
 			
-			vol_Light_Eye.VolUp(step_fast, 1.0);
-			vol_Light_FaceUp.VolUp(step_slow_Quake, 1.0);
-			vol_Light_FaceLow.VolUp(step_fast, 1.0);
-			vol_Light_ArmUp.VolUp(step_slow_Quake, 1.0);
-			vol_Light_ArmLow.VolUp(step_fast, 1.0);
+			vol_Light_Intro.VolUp(step_slow_Quake, 1.0);
+			vol_Light_QuakeH.VolUp(step_fast, 1.0);
+			vol_Light_Face.VolDown(step_fast, 0.0);
 			
 			vol_Light_Climax.VolDown(step_fast);
 			vol_Light_Back.VolDown(step_fast);
+			vol_Light_Vol.VolDown(step_fast);
 
 			sound_VolDown_AutoStop(sound_Ambient, step_slow);
 			sound_VolUp_AutoStart(sound_Mysterious, step_slow);
@@ -928,8 +1056,8 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
-			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_Climax.VolDown(step_slow);
+			sound_Ending.VolDown(step_slow);
 			
 			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.VolUp(step_fast); vol_mov_Evil.VolDown(step_fast); }
 			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolUp(step_fast); }
@@ -941,6 +1069,7 @@ void ofApp::VolumeControl(){
 			volLightDynamic__Down(step_fast);
 			vol_Light_Climax.VolDown(step_fast);
 			vol_Light_Back.VolDown(step_fast);
+			vol_Light_Vol.VolDown(step_fast);
 
 			sound_VolDown_AutoStop(sound_Ambient, step_slow);
 			sound_VolDown_AutoStop(sound_Mysterious, step_slow);
@@ -948,8 +1077,8 @@ void ofApp::VolumeControl(){
 			sound_VolUp_AutoStart(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
-			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_Climax.VolDown(step_slow);
+			sound_Ending.VolDown(step_slow);
 			
 			vol_mov_Calm.VolDown(step_fast);
 			vol_mov_Evil.VolDown(step_fast);
@@ -958,6 +1087,7 @@ void ofApp::VolumeControl(){
 		case STATE__MAGMA:
 			vol_Light_Climax.VolDown(step_fast);
 			vol_Light_Back.VolDown(step_fast);
+			vol_Light_Vol.VolDown(step_fast);
 			
 			sound_VolDown_AutoStop(sound_Ambient, step_slow);
 			sound_VolDown_AutoStop(sound_Mysterious, step_slow);
@@ -965,8 +1095,8 @@ void ofApp::VolumeControl(){
 			sound_VolUp_AutoStart(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
-			sound_VolUp_AutoStart(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slowest, volClimax_max);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_Climax.VolUp(step_slowest, volClimax_max);
+			sound_Ending.VolDown(step_slow);
 			
 			{
 				const double T = 4000;
@@ -978,8 +1108,11 @@ void ofApp::VolumeControl(){
 			
 		case STATE__DARK:
 		case STATE__FLYING:
-			vol_Light_Eye.VolDown(step_fast);
+			volLightDynamic__Down(step_fast);
+			
+			// vol_Light_Back.VolUp(step_fast, Gui_Global->volLight_Back_max);
 			vol_Light_Back.VolUp(step_fast);
+			vol_Light_Vol.VolDown(step_fast);
 			
 			sound_VolDown_AutoStop(sound_Ambient, step_fast);
 			sound_VolDown_AutoStop(sound_Mysterious, step_fast);
@@ -987,8 +1120,8 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Magma, step_fast);
 			sound_VolDown_AutoStop(sound_Dooon, step_fast);
 			sound_VolDown_AutoStop(sound_Fire, step_fast);
-			sound_VolUp_AutoStart(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slowest, volClimax_max);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_Climax.VolUp(step_slowest, volClimax_max);
+			sound_Ending.VolDown(step_slow);
 			
 			vol_mov_Calm.VolDown(step_fast);
 			vol_mov_Evil.VolDown(step_fast);
@@ -1002,8 +1135,8 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Quake, step_fast);
 			sound_VolDown_AutoStop(sound_Magma, step_fast);
 			sound_VolUp_AutoStart(sound_Fire, step_slow, volFire_max);
-			sound_VolUp_AutoStart(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slowest, volClimax_max);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_Climax.VolUp(step_slowest, volClimax_max);
+			sound_Ending.VolDown(step_slow);
 			
 			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.set(1.0); vol_mov_Evil.VolDown(step_fast); }
 			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.set(1.0); }
@@ -1018,9 +1151,9 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Quake, step_fast);
 			sound_VolDown_AutoStop(sound_Magma, step_fast);
 			sound_VolUp_AutoStart(sound_Fire, step_slow, volFire_max);
-			if(ColorId_of_Fire == COLOR_ID__CALM)	sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_norm, volClimax_Low_Calm);
-			else									sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_norm, volClimax_Low_Evil);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			if(ColorId_of_Fire == COLOR_ID__CALM)	sound_Climax.VolDown(step_slow, volClimax_Low_Calm);
+			else									sound_Climax.VolDown(step_slow, volClimax_Low_Evil);
+			sound_Ending.VolDown(step_slow);
 			
 			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.set(1.0); vol_mov_Evil.VolDown(step_fast); }
 			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.set(1.0); }
@@ -1030,15 +1163,15 @@ void ofApp::VolumeControl(){
 		case STATE__FADE_TO_END:
 		case STATE__NOSOUND:
 		{
-			const double step_climax = 1.0/d_eachState[STATE__FADE_TO_END] * (now - t_Last);
+			const double step_climax = 1.0/d_eachState[ColorId_of_Fire][STATE__FADE_TO_END] * (now - t_Last);
 			
 			sound_VolDown_AutoStop(sound_Ambient, step_fast);
 			sound_VolDown_AutoStop(sound_Mysterious, step_fast);
 			sound_VolDown_AutoStop(sound_Quake, step_fast);
 			sound_VolDown_AutoStop(sound_Magma, step_fast);
 			sound_VolUp_AutoStart(sound_Fire, step_slow, volFire_max);
-			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_climax, 0.0);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_Climax.VolDown(step_climax);
+			sound_Ending.VolDown(step_slow);
 			
 			vol_mov_Calm.VolDown(step_climax);
 			vol_mov_Evil.VolDown(step_climax);
@@ -1058,8 +1191,8 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Magma, step_fast);
 			sound_VolDown_AutoStop(sound_Dooon, step_fast);
 			sound_VolUp_AutoStart(sound_Fire, step_slow, volFire_max);
-			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_fast);
-			sound_VolUp_AutoStart(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_Ending, volEnding_max);
+			sound_Climax.VolDown(step_fast);
+			sound_Ending.VolUp(step_Ending, volEnding_max);
 			
 			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.VolUp(step_fast); vol_mov_Evil.VolDown(step_fast); }
 			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolUp(step_fast); }
@@ -1071,6 +1204,7 @@ void ofApp::VolumeControl(){
 			volLightDynamic__Down(step_slow);
 			vol_Light_Climax.VolDown(step_slow);
 			vol_Light_Back.VolUp(step_slow, Gui_Global->volLight_Back_max);
+			vol_Light_Vol.VolDown(step_slow);
 			
 			sound_VolUp_AutoStart(sound_Ambient, step_slow, volAmbient_max);
 			sound_VolDown_AutoStop(sound_Mysterious, step_slow);
@@ -1078,8 +1212,8 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
-			sound_VolDown_AutoStop(sound_Climax.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
-			sound_VolDown_AutoStop(sound_Ending.getSound(ColorId_of_Fire == COLOR_ID__CALM), step_slow);
+			sound_Climax.VolDown(step_slow);
+			sound_Ending.VolDown(step_slow);
 			
 			vol_mov_Calm.VolDown(step_slow);
 			vol_mov_Evil.VolDown(step_slow);
@@ -1118,14 +1252,15 @@ void ofApp::draw(){
 	********************/
 	draw_info();
 	
-	sendDmx_Shutter(b_DmxShutter_Open);
-	sendDmx_Light();
+	sendDmx();
 	SendOSC();
 	
 	// printf("%5.3f\r", sound_Climax.getPosition());
 	// printf("%d\r", sound_Climax.getPositionMS());
+	/*
 	printf("%5.2f\r", ofGetFrameRate());
 	fflush(stdout);
+	*/
 	
 	/********************
 	********************/
@@ -1240,7 +1375,7 @@ void ofApp::draw_info()
 			sprintf(buf, "ENDING : push Enter x2 : %d", c_toFadeOut);
 			break;
 		case STATE__FADEOUT:
-			if(now - t_from < d_eachState[State])	sprintf(buf, "FADEOUT:just a moment please.");
+			if(now - t_from < d_eachState[ColorId_of_Fire][State])	sprintf(buf, "FADEOUT:just a moment please.");
 			else									sprintf(buf, "FADEOUT:move the Led away.");
 			break;
 		default:
@@ -1252,9 +1387,12 @@ void ofApp::draw_info()
 	/********************
 	********************/
 	{
-		int _width = font[FONT_M].stringWidth("xxxxx.xx");
-		sprintf(buf, "%7.1f fps", ofGetFrameRate());
-		font[FONT_M].drawString(buf, ofGetWidth() - _width, TextHeight);
+		int _width = font[FONT_S].stringWidth("xxxxxxxxxxxxxxxx");
+		sprintf(buf, "%8.1f fps", ofGetFrameRate());
+		font[FONT_S].drawString(buf, ofGetWidth() - _width, TextHeight);
+		
+		sprintf(buf, "%8.3f volume", LastVol_of_Sound);
+		font[FONT_S].drawString(buf, ofGetWidth() - _width, TextHeight * 2);
 	}
 	
 	/********************
@@ -1263,7 +1401,7 @@ void ofApp::draw_info()
 		int _width = font[FONT_M].stringWidth("XXXXXXX");
 		
 		int dt = now - t_from;
-		int TimeLeft = (d_eachState[State] - dt)/1000;
+		int TimeLeft = (d_eachState[ColorId_of_Fire][State] - dt)/1000;
 		
 		if(TimeLeft <= 0)	sprintf(buf, "---");
 		else				sprintf(buf, "%5d", TimeLeft);
@@ -1300,55 +1438,88 @@ void ofApp::draw_info()
 
 /******************************
 ******************************/
-void ofApp::sendDmx_Shutter(bool b_open)
-{
-	if(b_open)	ode_Shutter.universe[0] = int(Gui_Global->DmxShutter_open);
-	else		ode_Shutter.universe[0] = int(Gui_Global->DmxShutter_close);
-	
-	ode_Shutter.SendDmx();
-}
-
-/******************************
-******************************/
-void ofApp::sendDmx_Light()
+void ofApp::sendDmx()
 {
 	/********************
 	********************/
-	for(int LightType = 0; LightType < 7; LightType++){
+	if(b_DmxShutter_Open)	ode[DmxShutter.ODE_id].universe[DmxShutter.AddressFrom] = int(Gui_Global->DmxShutter_open);
+	else					ode[DmxShutter.ODE_id].universe[DmxShutter.AddressFrom] = int(Gui_Global->DmxShutter_close);
+	
+	/********************
+	Dynamic Light : AiFarm
+	********************/
+	for(int LightType = 0; LightType < 3; LightType++){
+		/* */
+		const int* id_Array;
+		VOLUME* vol_Ligt;
+		
+		if(LightType == 0)		{ id_Array = id_Intro; vol_Ligt = &vol_Light_Intro; }
+		else if(LightType == 1)	{ id_Array = id_QuakeH; vol_Ligt = &vol_Light_QuakeH; }
+		else if(LightType == 2)	{ id_Array = id_Face; vol_Ligt = &vol_Light_Face; }
+		
+		/* */
+		for(int i = 0; id_Array[i] != -1; i++){
+			int id = id_Array[i];
+			
+			switch(Light_Dynamic[id].LedDeviceType){
+				case LED_DEVICE_TYPE_FIXED:
+					ode[ Light_Dynamic[id].DmxStorage.ODE_id ].universe[ Light_Dynamic[id].DmxStorage.AddressFrom + 0 ] = int(255 * Gui_Global->Led_dimmer); // dimmer
+					ode[ Light_Dynamic[id].DmxStorage.ODE_id ].universe[ Light_Dynamic[id].DmxStorage.AddressFrom + 1 ] = ofMap(Light_Dynamic[id].LedParam_Out.r * vol_Ligt->get(), 0, 1.0, 0, 255, true);
+					ode[ Light_Dynamic[id].DmxStorage.ODE_id ].universe[ Light_Dynamic[id].DmxStorage.AddressFrom + 2 ] = ofMap(Light_Dynamic[id].LedParam_Out.g * vol_Ligt->get(), 0, 1.0, 0, 255, true);
+					ode[ Light_Dynamic[id].DmxStorage.ODE_id ].universe[ Light_Dynamic[id].DmxStorage.AddressFrom + 3 ] = ofMap(Light_Dynamic[id].LedParam_Out.b * vol_Ligt->get(), 0, 1.0, 0, 255, true);
+					ode[ Light_Dynamic[id].DmxStorage.ODE_id ].universe[ Light_Dynamic[id].DmxStorage.AddressFrom + 4 ] = ofMap(Light_Dynamic[id].LedParam_Out.w * vol_Ligt->get(), 0, 1.0, 0, 255, true);
+					ode[ Light_Dynamic[id].DmxStorage.ODE_id ].universe[ Light_Dynamic[id].DmxStorage.AddressFrom + 5 ] = 1; // Strobe = open.
+					break;
+					
+				case LED_DEVICE_RGB:
+					ode[ Light_Dynamic[id].DmxStorage.ODE_id ].universe[ Light_Dynamic[id].DmxStorage.AddressFrom + 0 ] = ofMap(Light_Dynamic[id].LedParam_Out.r * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
+					ode[ Light_Dynamic[id].DmxStorage.ODE_id ].universe[ Light_Dynamic[id].DmxStorage.AddressFrom + 1 ] = ofMap(Light_Dynamic[id].LedParam_Out.g * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
+					ode[ Light_Dynamic[id].DmxStorage.ODE_id ].universe[ Light_Dynamic[id].DmxStorage.AddressFrom + 2 ] = ofMap(Light_Dynamic[id].LedParam_Out.b * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
+					break;
+					
+				case LED_DEVICE_1CH:
+					ode[ Light_Dynamic[id].DmxStorage.ODE_id ].universe[ Light_Dynamic[id].DmxStorage.AddressFrom + 0 ] = ofMap(Light_Dynamic[id].LedParam_Out.get_max() * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
+					break;
+					
+				default:
+					break;
+			}			
+		}
+	}
+	
+	/********************
+	********************/
+	for(int LightType = 0; LightType < 3; LightType++){
 		/* */
 		LED_LIGHT* LedLight;
 		int NUM_LEDS;
 		VOLUME* vol_Ligt;
 		
-		if(LightType == 0)		{ LedLight = Light_Dynamic_Eye; NUM_LEDS = NUM_LIGHTS_EYE; vol_Ligt = &vol_Light_Eye; }
-		else if(LightType == 1)	{ LedLight = Light_Dynamic_FaceUp; NUM_LEDS = NUM_LIGHTS_FACE_UP; vol_Ligt = &vol_Light_FaceUp; }
-		else if(LightType == 2)	{ LedLight = Light_Dynamic_FaceLow; NUM_LEDS = NUM_LIGHTS_FACE_LOW; vol_Ligt = &vol_Light_FaceLow; }
-		else if(LightType == 3)	{ LedLight = Light_Dynamic_ArmUp; NUM_LEDS = NUM_LIGHTS_ARM_UP; vol_Ligt = &vol_Light_ArmUp; }
-		else if(LightType == 4)	{ LedLight = Light_Dynamic_ArmLow; NUM_LEDS = NUM_LIGHTS_ARM_LOW; vol_Ligt = &vol_Light_ArmLow; }
-		else if(LightType == 5)	{ LedLight = Light_Climax; NUM_LEDS = NUM_LIGHTS_CLIMAX; vol_Ligt = &vol_Light_Climax; }
-		else if(LightType == 6)	{ LedLight = Light_Back; NUM_LEDS = NUM_LIGHTS_BACK; vol_Ligt = &vol_Light_Back; }
+		if(LightType == 0)		{ LedLight = Light_Climax; NUM_LEDS = NUM_LIGHTS_CLIMAX; vol_Ligt = &vol_Light_Climax; }
+		else if(LightType == 1)	{ LedLight = Light_Back; NUM_LEDS = NUM_LIGHTS_BACK; vol_Ligt = &vol_Light_Back; }
+		else if(LightType == 2)	{ LedLight = Light_Volume; NUM_LEDS = NUM_LIGHTS_VOL; vol_Ligt = &vol_Light_Vol; }
 		
 		/* */
 		for(int i = 0; i < NUM_LEDS; i++){
 			switch(LedLight[i].LedDeviceType){
 				case LED_DEVICE_TYPE_FIXED:
-					// ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 0 ] = 255; // dimmer
-					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 0 ] = int(255 * Gui_Global->Led_dimmer); // dimmer
-					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 1 ] = ofMap(LedLight[i].LedParam_Out.r * vol_Ligt->get(), 0, 1.0, 0, 255, true);
-					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 2 ] = ofMap(LedLight[i].LedParam_Out.g * vol_Ligt->get(), 0, 1.0, 0, 255, true);
-					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 3 ] = ofMap(LedLight[i].LedParam_Out.b * vol_Ligt->get(), 0, 1.0, 0, 255, true);
-					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 4 ] = ofMap(LedLight[i].LedParam_Out.w * vol_Ligt->get(), 0, 1.0, 0, 255, true);
-					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 5 ] = 1; // Strobe = open.
+					// ode[ LedLight[i].DmxStorage.ODE_id ].universe[ LedLight[i].DmxStorage.AddressFrom + 0 ] = 255; // dimmer
+					ode[ LedLight[i].DmxStorage.ODE_id ].universe[ LedLight[i].DmxStorage.AddressFrom + 0 ] = int(255 * Gui_Global->Led_dimmer); // dimmer
+					ode[ LedLight[i].DmxStorage.ODE_id ].universe[ LedLight[i].DmxStorage.AddressFrom + 1 ] = ofMap(LedLight[i].LedParam_Out.r * vol_Ligt->get(), 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].DmxStorage.ODE_id ].universe[ LedLight[i].DmxStorage.AddressFrom + 2 ] = ofMap(LedLight[i].LedParam_Out.g * vol_Ligt->get(), 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].DmxStorage.ODE_id ].universe[ LedLight[i].DmxStorage.AddressFrom + 3 ] = ofMap(LedLight[i].LedParam_Out.b * vol_Ligt->get(), 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].DmxStorage.ODE_id ].universe[ LedLight[i].DmxStorage.AddressFrom + 4 ] = ofMap(LedLight[i].LedParam_Out.w * vol_Ligt->get(), 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].DmxStorage.ODE_id ].universe[ LedLight[i].DmxStorage.AddressFrom + 5 ] = 1; // Strobe = open.
 					break;
 					
 				case LED_DEVICE_RGB:
-					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 0 ] = ofMap(LedLight[i].LedParam_Out.r * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
-					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 1 ] = ofMap(LedLight[i].LedParam_Out.g * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
-					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 2 ] = ofMap(LedLight[i].LedParam_Out.b * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].DmxStorage.ODE_id ].universe[ LedLight[i].DmxStorage.AddressFrom + 0 ] = ofMap(LedLight[i].LedParam_Out.r * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].DmxStorage.ODE_id ].universe[ LedLight[i].DmxStorage.AddressFrom + 1 ] = ofMap(LedLight[i].LedParam_Out.g * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].DmxStorage.ODE_id ].universe[ LedLight[i].DmxStorage.AddressFrom + 2 ] = ofMap(LedLight[i].LedParam_Out.b * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
 					break;
 					
 				case LED_DEVICE_1CH:
-					ode[ LedLight[i].ODE_id ].universe[ LedLight[i].AddressFrom + 0 ] = ofMap(LedLight[i].LedParam_Out.get_max() * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
+					ode[ LedLight[i].DmxStorage.ODE_id ].universe[ LedLight[i].DmxStorage.AddressFrom + 0 ] = ofMap(LedLight[i].LedParam_Out.get_max() * vol_Ligt->get() * Gui_Global->Led_dimmer, 0, 1.0, 0, 255, true);
 					break;
 					
 				default:

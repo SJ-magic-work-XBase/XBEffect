@@ -61,29 +61,76 @@ private:
 		COLOR_ID__BLACK,
 		COLOR_ID__CALM,
 		COLOR_ID__EVIL,
+		
+		NUM__COLOR_ID,
 	};
 	
 	enum{ FONT_S, FONT_M, FONT_L, FONT_LL, NUM_FONTSIZE, };
 	
+	enum{
+		NUM_VOICES = 8,
+	};
+	
 	/****************************************
 	****************************************/
-	int d_eachState[NUM_STATE] = {
-		0, // STATE__WAIT,
-		0, // STATE__CHECK_LED,
-		0, // STATE__MANUAL_ON,
-		4000, // STATE__INTRO_RISE,
-		1000, // STATE__INTRO_FALL,
-		6000, // STATE__QUAKE_RISE,
-		2000, // STATE__QUAKE_FALL,
-		12000, // STATE__MAGMA,
-		1000, // STATE__DARK,
-		1000, // STATE__FLYING,
-		20000, // STATE__ON,
-		30000, // STATE__ON_DIALOGUE,
-		10000, // STATE__FADE_TO_END,
-		1000, // STATE__NOSOUND,
-		0, // STATE__ENDING,
-		3000, // STATE__FADEOUT,
+	int d_eachState[NUM__COLOR_ID][NUM_STATE] = {
+		{ // COLOR_ID__BLACK
+			0, // STATE__WAIT,
+			0, // STATE__CHECK_LED,
+			0, // STATE__MANUAL_ON,
+			4000, // STATE__INTRO_RISE,
+			1000, // STATE__INTRO_FALL,
+			6000, // STATE__QUAKE_RISE,
+			2000, // STATE__QUAKE_FALL,
+			12000, // STATE__MAGMA,
+			1350, // STATE__DARK,
+			650, // STATE__FLYING,
+			
+			20000, // STATE__ON,
+			30000, // STATE__ON_DIALOGUE,
+			10000, // STATE__FADE_TO_END,
+			1000, // STATE__NOSOUND,
+			0, // STATE__ENDING,
+			3000, // STATE__FADEOUT,
+		},
+		{ // COLOR_ID__CALM
+			0, // STATE__WAIT,
+			0, // STATE__CHECK_LED,
+			0, // STATE__MANUAL_ON,
+			4000, // STATE__INTRO_RISE,
+			1000, // STATE__INTRO_FALL,
+			6000, // STATE__QUAKE_RISE,
+			2000, // STATE__QUAKE_FALL,
+			12000, // STATE__MAGMA,
+			1350, // STATE__DARK,
+			650, // STATE__FLYING,
+			
+			5000, // STATE__ON,
+			76000, // STATE__ON_DIALOGUE,
+			12000, // STATE__FADE_TO_END,
+			2000, // STATE__NOSOUND,
+			0, // STATE__ENDING,
+			3000, // STATE__FADEOUT,
+		},
+		{ // COLOR_ID__EVIL
+			0, // STATE__WAIT,
+			0, // STATE__CHECK_LED,
+			0, // STATE__MANUAL_ON,
+			4000, // STATE__INTRO_RISE,
+			1000, // STATE__INTRO_FALL,
+			6000, // STATE__QUAKE_RISE,
+			2000, // STATE__QUAKE_FALL,
+			12000, // STATE__MAGMA,
+			1350, // STATE__DARK,
+			650, // STATE__FLYING,
+			
+			20000, // STATE__ON,
+			61500, // STATE__ON_DIALOGUE,
+			10000, // STATE__FADE_TO_END,
+			3000, // STATE__NOSOUND,
+			0, // STATE__ENDING,
+			3000, // STATE__FADEOUT,
+		},
 	};
 	
 	/****************************************
@@ -107,6 +154,8 @@ private:
 	
 	/********************
 	********************/
+	float LastVol_of_Sound = 0;
+	
 	ofSoundPlayer sound_Ambient;
 	ofSoundPlayer sound_Mysterious;
 	ofSoundPlayer sound_Quake;
@@ -121,20 +170,61 @@ private:
 	
 	/********************
 	********************/
-	ODE ode_Shutter = ODE("10.7.206.7");
+	SOUND_PAIR NebutaVoice[NUM_VOICES] = {
+		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_0.wav", "_SelectedSound/Kira/BAD_END_0.wav", 0, 0, false, 1.0),
+		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_1.wav", "_SelectedSound/Kira/BAD_END_1.wav", 0, 0, false, 1.0),
+		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_2.wav", "_SelectedSound/Kira/BAD_END_2.wav", 0, 0, false, 1.0),
+		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_3.wav", "_SelectedSound/Kira/BAD_END_3.wav", 0, 0, false, 1.0),
+		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_4.wav", "_SelectedSound/Kira/BAD_END_4.wav", 0, 0, false, 1.0),
+		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_5.wav", "_SelectedSound/Kira/BAD_END_5.wav", 0, 0, false, 1.0),
+		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_6.wav", "_SelectedSound/Kira/BAD_END_6.wav", 0, 0, false, 1.0),
+		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_7.wav", "_SelectedSound/Kira/BAD_END_7.wav", 0, 0, false, 1.0),
+	};
+	int t_NebutaVoice_Zero = 0;
+	int NebutaVoiceId;
+	bool b_NebutaVoiceEnd;
+	
+	/* */
+	int t_NebutaVoiceStart_Evil[NUM_VOICES] = {				//		duration	space
+			22000	,	//	「有象無象がおる…」（吐き捨てる）	4000	1000
+			27000	,	//	「何も 知らず 同調し、己の ない　者ども」	9000	1000
+	//		37000	,	//	「悪霊よ、滅びよ！」	2000	1000
+			40000	,	//	「悪霊だと？」	3000	1000
+			44000	,	//	「フフフ…またしても我を悪霊と呼ぶのか」	9000	500
+			53500	,	//	「貴様たちが「悪」のレッテル貼りを続ける限り、我は滅びぬ。」	9000	500
+			63000	,	//	「悪霊たる我を産んだのは…貴様たち自身だ…。」	7000	500
+			70500	,	//	「…ゆめゆめ、忘れるな。この次は…コノ次ハ…‼」	10000	1000
+			81500	,	//	「グワ″ーーーーッッ‼」	10000	1000
+	};	//	92500					
+								
+								
+	int t_NebutaVoiceStart_Calm[NUM_VOICES] = {							
+			7000	,	//	「心地よい光だ…」	4000	2000
+			13000	,	//	「魂が…洗い清められてゆく」	6000	1000
+	//		20000	,	//	「鎮まれ。百鬼夜行と共に」	2000	2000
+			24000	,	//	「百鬼夜行だと？」	4000	1000
+			29000	,	//	「お前の眼には、アレがそう映ったというのか」	7000	1000
+			37000	,	//	「ある者が見れば魑魅魍魎の百鬼夜行。だがある者が見れば、美しい光の行軍」	13000	1000
+			51000	,	//	「善か？悪か？月か？太陽か？決めるのは、お前たち自身だ…。」	15000	1000
+			67000	,	//	「曇りのない眼で、いつか再び会いに来い。楽しみにしているぞ」	12000	2000
+			81000	,	//	「ワッハッハッハ…‼」	11000	1000
+	};	//	93000					
+	
+	/********************
+	********************/
+	// ODE ode_Shutter = ODE("10.7.206.7");
 	bool b_DmxShutter_Open = false;
 	
 	/********************
 	********************/
 	// VOLUME vol_Ligt_Dynamic;
-	VOLUME vol_Light_Eye;
-	VOLUME vol_Light_FaceUp;
-	VOLUME vol_Light_FaceLow;
-	VOLUME vol_Light_ArmUp;
-	VOLUME vol_Light_ArmLow;
+	VOLUME vol_Light_Intro;
+	VOLUME vol_Light_QuakeH;
+	VOLUME vol_Light_Face;
 	
 	VOLUME vol_Light_Climax;
 	VOLUME vol_Light_Back;
+	VOLUME vol_Light_Vol;
 	
 	VOLUME vol_mov_Calm;
 	VOLUME vol_mov_Evil;
@@ -152,20 +242,29 @@ private:
 
 	/****************************************
 	****************************************/
+	float Cal_VolOfSound();
 	bool isFile_Exist(const char* FileName);
 	void DmxOut_AllBlack();
 	void setup_Gui();
 	void SetFrontPattern__CheckLed(LED_LIGHT* _LedLight, int _NUM_LEDS);
 	void SetFrontPattern__On(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetFrontPattern__On(LED_LIGHT* _LedLight, const int* id_list);
 	void SetFrontPattern__Off(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetFrontPattern__Off(LED_LIGHT* _LedLight, const int* id_list);
 	void SetFrontPattern__1Time_Flash(LED_LIGHT* _LedLight, int _NUM_LEDS, int d_d);
+	void SetFrontPattern__1Time_Flash(LED_LIGHT* _LedLight, const int* id_list, int d_d);
 	void SetFrontPattern__Perlin(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetFrontPattern__Perlin(LED_LIGHT* _LedLight, const int* id_list);
 	void SetFrontPattern__Strobe_magma(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetFrontPattern__Strobe_magma(LED_LIGHT* _LedLight, const int* id_list);
 	void SetFrontPattern__Strobe_FadeToEnd(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetFrontPattern__Strobe_FadeToEnd(LED_LIGHT* _LedLight, const int* id_list);
 	void setup__RandomStrobe_magma(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1, int NUM_LEDS);
 	void setup__RandomStrobe_FadeToEnd(ofx_LIGHTPATTERN* LightPattern, int now_ms, double L0, double L1, int NUM_LEDS);
 	void SetBackPattern__Off(LED_LIGHT* _LedLight, int _NUM_LEDS);
+	void SetBackPattern__Off(LED_LIGHT* _LedLight, const int* id_list);
 	void SetBackPattern__1Time_Flash(LED_LIGHT* _LedLight, int _NUM_LEDS, int d_d);
+	void SetBackPattern__1Time_Flash(LED_LIGHT* _LedLight, const int* id_list, int d_d);
 	void TransitionTo_Wait();
 	void TransitionTo_CheckLed();
 	void TransitionTo_ManualOn();
@@ -186,8 +285,7 @@ private:
 	void DmxShutter_open();
 	void DmxShutter_close();
 	void draw_info();
-	void sendDmx_Light();
-	void sendDmx_Shutter(bool b_open);
+	void sendDmx();
 	void SendOSC();
 	void SendOSC_Clear();
 	void StateChart();
@@ -203,7 +301,8 @@ private:
 	void volLightDynamic__Down(double step, double limit = 0.0);
 	void volLightDynamic__Up(double step, double limit = 1.0);
 	bool volLightDynamic__IsZero();
-	
+	void ControlNebutaVoice();
+
 public:
 	/****************************************
 	****************************************/

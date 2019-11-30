@@ -16,7 +16,7 @@
 /************************************************************
 ************************************************************/
 enum{
-	WINDOW_WIDTH	= 300,	// 切れの良い解像度でないと、ofSaveScreen()での画面保存が上手く行かなかった(真っ暗な画面が保存されるだけ).
+	WINDOW_WIDTH	= 500,	// 切れの良い解像度でないと、ofSaveScreen()での画面保存が上手く行かなかった(真っ暗な画面が保存されるだけ).
 	WINDOW_HEIGHT	= 300,
 };
 
@@ -77,8 +77,11 @@ public:
 		ofxFloatSlider Led_dimmer;
 		ofxFloatSlider volLight_Back_max;
 		
+	ofxGuiGroup Group_VolLight;
+		ofxFloatSlider Smooth_dt;
+		ofxFloatSlider fft_map_max;
 		
-	ofxGuiGroup Group_Shutter;	
+	ofxGuiGroup Group_Shutter;
 		ofxFloatSlider DmxShutter_open;
 		ofxFloatSlider DmxShutter_close;
 

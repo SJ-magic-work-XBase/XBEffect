@@ -13,7 +13,8 @@
 
 /**************************************************
 **************************************************/
-class SOUND_PAIR : private Noncopyable{
+// class SOUND_PAIR : private Noncopyable{
+class SOUND_PAIR{
 private:
 	ofSoundPlayer sound_Calm;
 	ofSoundPlayer sound_Evil;
@@ -21,7 +22,39 @@ private:
 	int PosStartMs_Calm;
 	int PosStartMs_Evil;
 	
+	/******************************
+	AutoStartしない : Calm/Evil 両方鳴ってしまうので.
+	******************************/
+	void sound_VolUp(ofSoundPlayer& sound, double step, double limit = 1.0)
+	{
+		if(!sound.isLoaded() || !sound.isPlaying()) return;
+		
+		float vol = sound.getVolume();
+		vol += step;
+		if(limit < vol) vol = limit;
+		sound.setVolume(vol);
+	}
+	
+	void sound_VolDown_AutoStop(ofSoundPlayer& sound, double step, double limit = 0.0)
+	{
+		if(!sound.isLoaded() || !sound.isPlaying()) return;
+		
+		float vol = sound.getVolume();
+		vol -= step;
+		if(vol < limit) vol = limit;
+		sound.setVolume(vol);
+		
+		if( (vol <= 0) && (sound.isPlaying()) ){
+			sound.stop();
+			sound.setPosition(0);
+		}
+	}
+	
 public:
+	SOUND_PAIR()
+	{
+	}
+	
 	SOUND_PAIR(string FileName_Calm, string FileName_Evil, int _PosStartMs_Calm, int _PosStartMs_Evil, bool b_Loop, double vol)
 	: PosStartMs_Calm(_PosStartMs_Calm)
 	, PosStartMs_Evil(_PosStartMs_Evil)
@@ -64,20 +97,32 @@ public:
 		else		sound_Evil.play();
 	}
 	
-	void setVolume(bool b_Calm, double val){
-		if(b_Calm)	sound_Calm.setVolume(val);
-		else		sound_Evil.setVolume(val);
+	void setVolume(double val){
+		sound_Calm.setVolume(val);
+		sound_Evil.setVolume(val);
 	}
 	
-	void setStartPositionMS(bool b_Calm){
-		if(b_Calm)	sound_Calm.setPositionMS(PosStartMs_Calm);
-		else		sound_Evil.setPositionMS(PosStartMs_Evil);
+	void setStartPositionMS(){
+		sound_Calm.setPositionMS(PosStartMs_Calm);
+		sound_Evil.setPositionMS(PosStartMs_Evil);
 	}
 	
+	void VolUp(double step, double limit = 1.0){
+		sound_VolUp(sound_Calm, step, limit);
+		sound_VolUp(sound_Evil, step, limit);
+	}
+	
+	void VolDown(double step, double limit = 0.0){
+		sound_VolDown_AutoStop(sound_Calm, step, limit);
+		sound_VolDown_AutoStop(sound_Evil, step, limit);
+	}
+	
+	/*
 	ofSoundPlayer& getSound(bool b_Calm){
 		if(b_Calm)	return sound_Calm;
 		else		return sound_Evil;
 	}
+	*/
 };
 
 /**************************************************
@@ -96,12 +141,16 @@ public:
 	double get()			{ return vol; }
 	
 	void VolUp(double step, double limit = 1.0){
+		if(limit <= 0)	{ ERROR_MSG(); std::exit(1); } // must be coding Error.
+		
 		vol += step;
 		if(limit < vol) vol = limit;
 		checkLimit();
 	}
 	
 	void VolDown(double step, double limit = 0.0){
+		if(1 <=limit)	{ ERROR_MSG(); std::exit(1); } // must be coding Error.
+		
 		vol -= step;
 		if(vol < limit) vol = limit;
 		checkLimit();

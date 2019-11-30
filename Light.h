@@ -49,6 +49,18 @@ public:
 
 /**************************************************
 **************************************************/
+struct DMX_STORAGE{
+	const int ODE_id;
+	const int AddressFrom;	
+	
+	DMX_STORAGE(int _ODE_id, int _AddressFrom)
+	: ODE_id(_ODE_id), AddressFrom(_AddressFrom)
+	{
+	}
+};
+
+/**************************************************
+**************************************************/
 class LED_PARAM{
 private:
 	void _checkLimit(double& val){
@@ -133,8 +145,7 @@ public:
 /**************************************************
 **************************************************/
 struct LED_LIGHT{
-	const int ODE_id;
-	const int AddressFrom;
+	DMX_STORAGE DmxStorage;
 	const enum LED_DEVICE_TYPE LedDeviceType;
 	
 	LED_PARAM LedParam_Out;
@@ -142,7 +153,7 @@ struct LED_LIGHT{
 	ofx_LIGHTPATTERN LightPattern_Back;
 	
 	LED_LIGHT(int _ODE_id, int _AddressFrom, enum LED_DEVICE_TYPE _LedDeviceType)
-	: ODE_id(_ODE_id), AddressFrom(_AddressFrom), LedDeviceType(_LedDeviceType)
+	: DmxStorage(_ODE_id, _AddressFrom), LedDeviceType(_LedDeviceType)
 	{
 		LightPattern_Front.setup(0, 0);
 		LightPattern_Back.setup(0, 0);
@@ -161,6 +172,11 @@ struct LED_LIGHT{
 		Lev = LightPattern_Back.update(now);
 		LedParam_Out += col_Back * Lev;
 	}
+	
+	void update_direct(double Lev, const LED_PARAM& col)
+	{
+		LedParam_Out = col * Lev;
+	}
 };
 
 
@@ -169,23 +185,14 @@ struct LED_LIGHT{
 extern ODE ode[];
 extern const int NUM_ODES;
 
+extern DMX_STORAGE DmxShutter;
+
 extern LED_LIGHT Light_Dynamic[];
 extern const int NUM_LIGHTS_DYNAMIC;
 
-extern LED_LIGHT* Light_Dynamic_Eye;
-extern const int NUM_LIGHTS_EYE;
-											
-extern LED_LIGHT* Light_Dynamic_FaceUp;
-extern const int NUM_LIGHTS_FACE_UP;
-											
-extern LED_LIGHT* Light_Dynamic_FaceLow;
-extern const int NUM_LIGHTS_FACE_LOW;
-											
-extern LED_LIGHT* Light_Dynamic_ArmUp;
-extern const int NUM_LIGHTS_ARM_UP;
-											
-extern LED_LIGHT* Light_Dynamic_ArmLow;
-extern const int NUM_LIGHTS_ARM_LOW;
+extern const int id_Intro[];
+extern const int id_QuakeH[];
+extern const int id_Face[];
 
 
 extern LED_LIGHT Light_Climax[];
@@ -193,6 +200,9 @@ extern const int NUM_LIGHTS_CLIMAX;
 
 extern LED_LIGHT Light_Back[];
 extern const int NUM_LIGHTS_BACK;
+
+extern LED_LIGHT Light_Volume[];
+extern const int NUM_LIGHTS_VOL;
 
 
 

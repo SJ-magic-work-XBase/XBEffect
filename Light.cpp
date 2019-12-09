@@ -7,7 +7,7 @@
 ********************/
 ODE ode[] = {
 	ODE("10.7.184.202"),
-	ODE("10.7.185.102"),
+	ODE("10.8.4.126"),
 	ODE("10.7.206.7"),
 };
 const int NUM_ODES = sizeof(ode) / sizeof(ode[0]);
@@ -19,13 +19,14 @@ DMX_STORAGE DmxShutter(2, 0);
 /********************
 ********************/
 const int id_Intro[] = {		
+	5	,
 	6	,
 	7	,
 	8	,
 	9	,
 	10	,
 	11	,
-	12	,
+	13	,
 	14	,
 	15	,
 	16	,
@@ -34,7 +35,7 @@ const int id_Intro[] = {
 	19	,
 	20	,
 	21	,
-	22	,
+	42	,
 	43	,
 	44	,
 	45	,
@@ -48,7 +49,7 @@ const int id_Intro[] = {
 	53	,
 	54	,
 	55	,
-	56	,
+	60	,
 	61	,
 	62	,
 	63	,
@@ -56,26 +57,26 @@ const int id_Intro[] = {
 	65	,
 	66	,
 	67	,
-	68	,
+	100	,
 	101	,
 	102	,
 	103	,
-	104	,
+	110	,
 	111	,
 	112	,
 	113	,
-	114	,
 	-1	,
 };		
 		
 const int id_QuakeH[] = {		
+	0	,
 	1	,
 	2	,
 	3	,
 	4	,
-	5	,
+	22	,
 	23	,
-	24	,
+	34	,
 	35	,
 	36	,
 	37	,
@@ -83,16 +84,16 @@ const int id_QuakeH[] = {
 	39	,
 	40	,
 	41	,
-	42	,
+	68	,
 	69	,
 	70	,
 	71	,
 	72	,
-	73	,
+	104	,
 	105	,
 	106	,
 	107	,
-	108	,
+	114	,
 	115	,
 	116	,
 	117	,
@@ -108,11 +109,11 @@ const int id_QuakeH[] = {
 	127	,
 	128	,
 	129	,
-	130	,
 	-1	,
 };		
 		
 const int id_Face[] = {		
+	24	,
 	25	,
 	26	,
 	27	,
@@ -122,7 +123,6 @@ const int id_Face[] = {
 	31	,
 	32	,
 	33	,
-	34	,
 	-1	,
 };		
 
@@ -270,7 +270,7 @@ const int NUM_LIGHTS_DYNAMIC = sizeof(Light_Dynamic) / sizeof(Light_Dynamic[0]);
 LED_LIGHT Light_Climax[] = {					//	1					
 //				ODE id		Address from		Device			Hardware(Start Address) setting 
 /*	0	*/	LED_LIGHT(	1	,	0	,	LED_DEVICE_1CH	),	//	1
-/*	1	*/	LED_LIGHT(	1	,	1	,	LED_DEVICE_1CH	),	//	2
+// /*	1	*/	LED_LIGHT(	1	,	1	,	LED_DEVICE_1CH	),	//	2
 };											
 											
 const int NUM_LIGHTS_CLIMAX = sizeof(Light_Climax) / sizeof(Light_Climax[0]);																		

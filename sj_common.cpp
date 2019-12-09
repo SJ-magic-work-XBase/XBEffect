@@ -70,12 +70,12 @@ void GUI_GLOBAL::setup(string GuiName, string FileName, float x, float y)
 		Group_Light.add(col_WhenTest.setup("ColTest", ColWhenTest_init, ColWhenTest_min, ColWhenTest_max));
 		
 		Group_Light.add(Led_dimmer.setup("dimmer", 1.0, 0, 1.0));
-		Group_Light.add(volLight_Back_max.setup("L_Back_max", 0.5, 0, 1.0)); // XBCamの検知と相談しながら.
+		Group_Light.add(volLight_Back_max.setup("L_Back_max", 0.5, 0.01, 1.0)); // XBCamの検知と相談しながら.
 	gui.add(&Group_Light);
 	
 	Group_VolLight.setup("VolLight");
 		Group_VolLight.add(Smooth_dt.setup("Smooth_dt", 193, 0, 1500));
-		Group_VolLight.add(fft_map_max.setup("fft_map_max", 0.24, 0, 1.0));
+		Group_VolLight.add(fft_map_max.setup("fft_map_max", 0.3, 0, 1.0));
 	gui.add(&Group_VolLight);
 	
 	Group_Shutter.setup("Shutter");

@@ -520,6 +520,12 @@ void ofApp::TransitionTo_QuakeRise(){
 	/* */
 	update_ColorOfFire();
 	b_skip = true;
+	
+	/********************
+	********************/
+	t_NebutaVoice_Zero = now;
+	NebutaVoiceId = 0;
+	b_NebutaVoiceEnd = false;
 }
 
 /******************************
@@ -599,13 +605,7 @@ void ofApp::TransitionTo_On(){
 	sound_Dooon.setPosition(0);
 	sound_Dooon.play();
 	
-	// update_ColorOfFire();
-	
-	/********************
-	********************/
-	t_NebutaVoice_Zero = now;
-	NebutaVoiceId = 0;
-	b_NebutaVoiceEnd = false;
+	// update_ColorOfFire();	
 }
 
 /******************************
@@ -637,7 +637,7 @@ void ofApp::TransitionTo_FadeToEnd(){
 	
 	/* */
 	volLightDynamic__set(1.0);
-	vol_Light_Climax.set(0.0);
+	// vol_Light_Climax.set(1.0);
 	vol_Light_Back.set(1.0);
 	
 	/* */
@@ -854,7 +854,8 @@ void ofApp::update(){
 void ofApp::ControlNebutaVoice(){
 	/********************
 	********************/
-	if( (State != STATE__ON) && (State != STATE__ON_DIALOGUE) )	return;
+	if( State < STATE__QUAKE_RISE) return;
+	// if( (State != STATE__ON) && (State != STATE__ON_DIALOGUE) )	return;
 	
 	/********************
 	********************/
@@ -867,9 +868,11 @@ void ofApp::ControlNebutaVoice(){
 	else									t_NebutaVoiceStart = t_NebutaVoiceStart_Evil;
 	
 	if(t_NebutaVoiceStart[NebutaVoiceId] <= t_NebutaVoice){
-		NebutaVoice[NebutaVoiceId].play(ColorId_of_Fire == COLOR_ID__CALM);
-		NebutaVoice[NebutaVoiceId].setVolume(1.0);
-		NebutaVoice[NebutaVoiceId].setStartPositionMS();
+		if(!NebutaVoice[NebutaVoiceId].isPlaying()){
+			NebutaVoice[NebutaVoiceId].play(ColorId_of_Fire == COLOR_ID__CALM);
+			NebutaVoice[NebutaVoiceId].setVolume(1.0);
+			NebutaVoice[NebutaVoiceId].setStartPositionMS();
+		}
 		
 		NebutaVoiceId++;
 		if(NUM_VOICES - 1 <= NebutaVoiceId) b_NebutaVoiceEnd = true;
@@ -937,7 +940,8 @@ void ofApp::VolumeControl(){
 	const double volClimax_max = 0.9;
 	const double volClimax_Low_Calm = 0.05;
 	const double volClimax_Low_Evil = 0.8;
-	const double volEnding_max = 0.7;
+	// const double volEnding_max = 0.7;
+	const double volEnding_max = 0.4;
 	
 	const double step_slowest	= 1.0/d_eachState[ColorId_of_Fire][STATE__MAGMA] * (now - t_Last);
 	const double step_slower	= 1.0/5000.0 * (now - t_Last);
@@ -1144,6 +1148,10 @@ void ofApp::VolumeControl(){
 			break;
 			
 		case STATE__ON_DIALOGUE:
+		{
+			const double step_slow_Dialogue = 1.0/d_eachState[ColorId_of_Fire][STATE__ON_DIALOGUE] * 3/4 * (now - t_Last);
+			vol_Light_Climax.VolDown(step_slow_Dialogue, 0.4);
+			
 			vol_Light_Back.VolDown(step_fast);
 			
 			sound_VolDown_AutoStop(sound_Ambient, step_fast);
@@ -1158,12 +1166,15 @@ void ofApp::VolumeControl(){
 			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.set(1.0); vol_mov_Evil.VolDown(step_fast); }
 			else if(ColorId_of_Fire == COLOR_ID__EVIL)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.set(1.0); }
 			else if(ColorId_of_Fire == COLOR_ID__BLACK)	{ vol_mov_Calm.VolDown(step_fast); vol_mov_Evil.VolDown(step_fast); } // ないはず.
+		}
 			break;
 			
 		case STATE__FADE_TO_END:
 		case STATE__NOSOUND:
 		{
 			const double step_climax = 1.0/d_eachState[ColorId_of_Fire][STATE__FADE_TO_END] * (now - t_Last);
+			
+			vol_Light_Climax.VolDown(step_fast);
 			
 			sound_VolDown_AutoStop(sound_Ambient, step_fast);
 			sound_VolDown_AutoStop(sound_Mysterious, step_fast);
@@ -1183,6 +1194,7 @@ void ofApp::VolumeControl(){
 			const double step_Ending = 1.0/10000 * (now - t_Last);
 			
 			volLightDynamic__Down(step_fast);
+			// vol_Light_Climax.VolUp(step_norm);
 			vol_Light_Back.VolDown(step_fast);
 			
 			sound_VolDown_AutoStop(sound_Ambient, step_fast);

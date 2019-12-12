@@ -68,7 +68,7 @@ private:
 	enum{ FONT_S, FONT_M, FONT_L, FONT_LL, NUM_FONTSIZE, };
 	
 	enum{
-		NUM_VOICES = 8,
+		NUM_VOICES = 6,
 	};
 	
 	/****************************************
@@ -106,9 +106,9 @@ private:
 			650, // STATE__FLYING,
 			
 			5000, // STATE__ON,
-			70000, // STATE__ON_DIALOGUE,
+			45000, // STATE__ON_DIALOGUE,
 			12000, // STATE__FADE_TO_END,
-			2000, // STATE__NOSOUND,
+			5000, // STATE__NOSOUND,
 			0, // STATE__ENDING,
 			3000, // STATE__FADEOUT,
 		},
@@ -125,9 +125,9 @@ private:
 			650, // STATE__FLYING,
 			
 			20000, // STATE__ON,
-			56500, // STATE__ON_DIALOGUE,
-			10000, // STATE__FADE_TO_END,
-			3000, // STATE__NOSOUND,
+			30000, // STATE__ON_DIALOGUE,
+			11000, // STATE__FADE_TO_END,
+			5000, // STATE__NOSOUND,
 			0, // STATE__ENDING,
 			3000, // STATE__FADEOUT,
 		},
@@ -174,10 +174,8 @@ private:
 		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_0.wav", "_SelectedSound/Kira/BAD_END_0.wav", 0, 0, false, 1.0),
 		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_1.wav", "_SelectedSound/Kira/BAD_END_1.wav", 0, 0, false, 1.0),
 		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_2.wav", "_SelectedSound/Kira/BAD_END_2.wav", 0, 0, false, 1.0),
-		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_3.wav", "_SelectedSound/Kira/BAD_END_3.wav", 0, 0, false, 1.0),
-		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_4.wav", "_SelectedSound/Kira/BAD_END_4.wav", 0, 0, false, 1.0),
-		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_5.wav", "_SelectedSound/Kira/BAD_END_5.wav", 0, 0, false, 1.0),
-		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_6.wav", "_SelectedSound/Kira/BAD_END_6.wav", 0, 0, false, 1.0),
+		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_4.wav", "_SelectedSound/Kira/BAD_END_3.wav", 0, 0, false, 1.0),
+		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_5.wav", "_SelectedSound/Kira/BAD_END_6.wav", 0, 0, false, 1.0),
 		SOUND_PAIR("_SelectedSound/Kira/GOOD_END_7.wav", "_SelectedSound/Kira/BAD_END_7.wav", 0, 0, false, 1.0),
 	};
 	int t_NebutaVoice_Zero = 0;
@@ -185,30 +183,27 @@ private:
 	bool b_NebutaVoiceEnd;
 	
 	/* */
-	int t_NebutaVoiceStart_Evil[NUM_VOICES] = {				//		duration	space
-			2000	,	//	「有象無象がおる…」（吐き捨てる）	4000	1000
-			44000	,	//	「何も 知らず 同調し、己の ない　者ども」	9000	1000
-	//		54000	,	//	「悪霊よ、滅びよ！」	2000	1000
-			57000	,	//	「悪霊だと？」	3000	1000
-			61000	,	//	「フフフ…またしても我を悪霊と呼ぶのか」	9000	500
-			70500	,	//	「貴様たちが「悪」のレッテル貼りを続ける限り、我は滅びぬ。」	9000	500
-			80000	,	//	「悪霊たる我を産んだのは…貴様たち自身だ…。」	7000	500
-			87500	,	//	「…ゆめゆめ、忘れるな。この次は…コノ次ハ…‼」	10000	1000
-			98500	,	//	「グワ″ーーーーッッ‼」	10000	1000
-	};	//	109500					
-								
-								
-	int t_NebutaVoiceStart_Calm[NUM_VOICES] = {							
-			2000	,	//	「心地よい光だ…」	4000	2000
-			29000	,	//	「魂が…洗い清められてゆく」	6000	1000
-	//		36000	,	//	「鎮まれ。百鬼夜行と共に」	2000	2000
-			40000	,	//	「百鬼夜行だと？」	4000	1000
-			45000	,	//	「お前の眼には、アレがそう映ったというのか」	7000	1000
-			53000	,	//	「ある者が見れば魑魅魍魎の百鬼夜行。だがある者が見れば、美しい光の行軍」	13000	1000
-			67000	,	//	「善か？悪か？月か？太陽か？決めるのは、お前たち自身だ…。」	15000	1000
-			83000	,	//	「曇りのない眼で、いつか再び会いに来い。楽しみにしているぞ」	12000	2000
-			97000	,	//	「ワッハッハッハ…‼」	11000	1000
-	};	//	109000					
+	int t_NebutaVoiceStart_Evil[NUM_VOICES] = {				//			duration	space
+			2000	,	//	0	「有象無象がおる…」（吐き捨てる）	4000	1000
+			27000	,	//	1	「何も 知らず 同調し、己の ない　者ども」	9000	1000
+	//		44000	,	//		「悪霊よ、滅びよ！」	2000	1000
+			47000	,	//	2	「悪霊だと？」	3000	1000
+			51000	,	//	3	「フフフ…またしても我を悪霊と呼ぶのか」	9000	1000
+			61000	,	//	6	「…ゆめゆめ、忘れるな。この次は…コノ次ハ…‼」	10000	1000
+			72000	,	//	7	「グワ″ーーーーッッ‼」	10000	1000
+	};	//	83000						
+	//	STATE__ON_DIALOGUE	30000						
+									
+	int t_NebutaVoiceStart_Calm[NUM_VOICES] = {								
+			2000	,	//	0	「心地よい光だ…」	4000	2000
+			29000	,	//	1	「魂が…洗い清められてゆく」	6000	1000
+	//		36000	,	//		「鎮まれ。百鬼夜行と共に」	2000	2000
+			40000	,	//	2	「百鬼夜行だと？」	4000	2000
+			46000	,	//	4	「ある者が見れば魑魅魍魎の百鬼夜行。だがある者が見れば、美しい光の行軍」	13000	1000
+			60000	,	//	5	「善か？悪か？月か？太陽か？決めるのは、お前たち自身だ…。」	11000	1000
+			72000	,	//	7	「ワッハッハッハ…‼」	11000	1000
+	};	//	84000						
+	//	STATE__ON_DIALOGUE	45000						
 	
 	/********************
 	********************/

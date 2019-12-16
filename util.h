@@ -102,6 +102,12 @@ public:
 		sound_Evil.setVolume(val);
 	}
 	
+	double getVolume(){
+		if(sound_Calm.isPlaying())		return sound_Calm.getVolume();
+		else if(sound_Evil.isPlaying())	return sound_Evil.getVolume();
+		else							return 0;
+	}
+	
 	void setStartPositionMS(){
 		sound_Calm.setPositionMS(PosStartMs_Calm);
 		sound_Evil.setPositionMS(PosStartMs_Evil);

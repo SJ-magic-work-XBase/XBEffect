@@ -935,11 +935,17 @@ bool ofApp::volLightDynamic__IsZero(){
 /******************************
 ******************************/
 void ofApp::VolumeControl(){
+	enum{ NUM_MAXLEV_CLIMAX = 3, };
+	
 	const double volAmbient_max = 0.1; // 風音があまりうるさいと嫌なので.
 	const double volFire_max = 0.6;
-	const double volClimax_max = 0.9;
+	
+	// const double volClimax_max = 0.9;
+	const double volClimax_max__Evil[NUM_MAXLEV_CLIMAX] = {0.9, 0.45, 1.0};
+	const double volClimax_max__Calm[NUM_MAXLEV_CLIMAX] = {0.9, 0.9, 0.9};
 	const double volClimax_Low_Calm = 0.05;
 	const double volClimax_Low_Evil = 0.8;
+	
 	// const double volEnding_max = 0.7;
 	const double volEnding_max = 0.4;
 	
@@ -1099,7 +1105,11 @@ void ofApp::VolumeControl(){
 			sound_VolUp_AutoStart(sound_Magma, step_slow);
 			sound_VolDown_AutoStop(sound_Dooon, step_slow);
 			sound_VolDown_AutoStop(sound_Fire, step_slow);
-			sound_Climax.VolUp(step_slowest, volClimax_max);
+			
+			if(ColorId_of_Fire == COLOR_ID__CALM)		sound_Climax.VolUp(step_slowest, volClimax_max__Calm[0]);
+			else if(ColorId_of_Fire == COLOR_ID__EVIL)	sound_Climax.VolUp(step_slowest, volClimax_max__Evil[0]);
+			else if(ColorId_of_Fire == COLOR_ID__BLACK)	sound_Climax.VolUp(step_slowest, volClimax_max__Calm[0]); // ないはず.
+			
 			sound_Ending.VolDown(step_slow);
 			
 			{
@@ -1107,7 +1117,6 @@ void ofApp::VolumeControl(){
 				vol_mov_Calm.set(my_SinWave(T, 0, 0, 1));
 				vol_mov_Evil.set(my_SinWave(T, 135, 0, 1));
 			}
-			
 			break;
 			
 		case STATE__DARK:
@@ -1124,7 +1133,11 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Magma, step_fast);
 			sound_VolDown_AutoStop(sound_Dooon, step_fast);
 			sound_VolDown_AutoStop(sound_Fire, step_fast);
-			sound_Climax.VolUp(step_slowest, volClimax_max);
+			
+			if(ColorId_of_Fire == COLOR_ID__CALM)		sound_Climax.VolUp(step_slowest, volClimax_max__Calm[0]);
+			else if(ColorId_of_Fire == COLOR_ID__EVIL)	sound_Climax.VolUp(step_slowest, volClimax_max__Evil[0]);
+			else if(ColorId_of_Fire == COLOR_ID__BLACK)	sound_Climax.VolUp(step_slowest, volClimax_max__Calm[0]); // ないはず.
+			
 			sound_Ending.VolDown(step_slow);
 			
 			vol_mov_Calm.VolDown(step_fast);
@@ -1139,7 +1152,20 @@ void ofApp::VolumeControl(){
 			sound_VolDown_AutoStop(sound_Quake, step_fast);
 			sound_VolDown_AutoStop(sound_Magma, step_fast);
 			sound_VolUp_AutoStart(sound_Fire, step_slow, volFire_max);
-			sound_Climax.VolUp(step_slowest, volClimax_max);
+			
+			{
+				int t_NebutaVoice = now - t_NebutaVoice_Zero;
+
+				if(ColorId_of_Fire == COLOR_ID__CALM){
+					sound_Climax.VolUp(step_slow, volClimax_max__Calm[2]);
+				}else if(ColorId_of_Fire == COLOR_ID__EVIL){
+					if(t_NebutaVoice < 32500)	sound_Climax.VolUp(step_slow, volClimax_max__Evil[1]);
+					else						sound_Climax.VolUp(step_slow, volClimax_max__Evil[2]);
+				}else if(ColorId_of_Fire == COLOR_ID__BLACK){
+					sound_Climax.VolUp(step_slow, volClimax_max__Calm[2]); // ないはず
+				}
+			}
+			
 			sound_Ending.VolDown(step_slow);
 			
 			if(ColorId_of_Fire == COLOR_ID__CALM)		{ vol_mov_Calm.set(1.0); vol_mov_Evil.VolDown(step_fast); }
@@ -1399,12 +1425,15 @@ void ofApp::draw_info()
 	/********************
 	********************/
 	{
-		int _width = font[FONT_S].stringWidth("xxxxxxxxxxxxxxxx");
+		int _width = font[FONT_S].stringWidth("xxxxxxxxxxxxxxxxxxxxx");
 		sprintf(buf, "%8.1f fps", ofGetFrameRate());
 		font[FONT_S].drawString(buf, ofGetWidth() - _width, TextHeight);
 		
 		sprintf(buf, "%8.3f volume", LastVol_of_Sound);
 		font[FONT_S].drawString(buf, ofGetWidth() - _width, TextHeight * 2);
+		
+		sprintf(buf, "%8.3f climax vol", sound_Climax.getVolume());
+		font[FONT_S].drawString(buf, ofGetWidth() - _width, TextHeight * 3);
 	}
 	
 	/********************
